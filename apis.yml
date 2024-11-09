@@ -1,27 +1,22 @@
-
-name: Brand API
-description: >-
-  Brand API enables developers to personalize theircustomer journey by building
-  unique branded experiences. ~ https://brandfetch.com/developers
-image: >-
-  https://kinlane-productions2.s3.amazonaws.com/apis-json-icons/brand-api-create-branded-experiences.png
 url: https://example.com/apis/brand-api-create-branded-experiences.yml
-created: 2024/3/30
-modified: 2024/3/30
-specificationVersion: '0.16'
-tags:
-  - Bookmarks
 apis:
   - name: Brand API
-    description: >-
-      Brand API enables developers to personalize theircustomer journey by
-      building unique branded experiences. ~ https://brandfetch.com/developers
     image: https://kinlane-productions2.s3.amazonaws.com/apis-json/apis-json-logo.jpg
     humanURL: https://brandfetch.com/developers
-    overlays: []
+    description: >-
+      Brand API enables developers to personalize their customer journey by
+      building unique branded experiences.
+name: Brand API
+tags:
+  - Brands
+image: >-
+  https://kinlane-productions2.s3.amazonaws.com/apis-json-icons/brand-api-create-branded-experiences.png
+created: '2024-03-30T00:00:00.000Z'
+modified: '2024-11-09'
+description: >-
+  Brand API enables developers to personalize theircustomer journey by building
+  unique branded experiences.
 maintainers:
   - FN: API Evangelist
     email: info@apievangelist.com
-overlays:
-  - type: APIs.io Search
-    url: overlays/apis-io-search.yml
+specificationVersion: '0.19'
