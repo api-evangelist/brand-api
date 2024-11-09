@@ -24,7 +24,48 @@ tags:
   - Brands
 image: >-
   https://kinlane-productions2.s3.amazonaws.com/apis-json-icons/brand-api-create-branded-experiences.png
-common: []
+common:
+  - name: Customers
+    description: customers
+    url: https://brandfetch.com/developers/customers
+    type: Customers
+  - name: Pricing
+    url: https://brandfetch.com/developers/pricing
+    type: Pricing
+  - name: Getting Started
+    url: https://docs.brandfetch.com/docs/getting-started
+    type: GettingStarted
+  - name: Webhooks
+    url: https://docs.brandfetch.com/docs/webhooks/overview
+    type: Webhooks
+  - name: Event Types
+    description: Event types
+    url: https://docs.brandfetch.com/docs/webhooks/event-types
+    type: EventTypes
+  - name: Support
+    url: https://docs.brandfetch.com/support/getting-help
+    type: Support
+  - name: Issues
+    url: https://docs.brandfetch.com/support/report-inaccuracies
+    type: Issues
+  - name: Recipes
+    url: https://docs.brandfetch.com/recipes/overview
+    type: Recipes
+  - name: Documentation
+    url: https://docs.brandfetch.com/reference/overview
+    type: Documentation
+  - name: Sandbox
+    url: https://docs.brandfetch.com/docs/brand-api#testing-sandbox
+    type: Sandbox
+  - name: Change Log
+    url: https://docs.brandfetch.com/changelog/2024
+    type: ChangeLog
+  - name: Login
+    url: https://developers.brandfetch.com/
+    type: Login
+  - name: SignUp
+    url: https://developers.brandfetch.com/register
+    type: SignUp
 created: '2024-03-30T00:00:00.000Z'
 modified: '2024-11-09'
 description: >-
