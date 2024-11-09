@@ -20,3 +20,12 @@ maintainers:
   - FN: API Evangelist
     email: info@apievangelist.com
 specificationVersion: '0.19'
+common:
+  - name: Customers
+    description: customers
+    url: properties/customers
+    type: Customers
+  - name: Pricing
+    url: properties/pricing
+    type: Pricing
+aid: brand-api
