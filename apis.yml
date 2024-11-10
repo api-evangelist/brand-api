@@ -10,7 +10,7 @@ apis:
         type: OpenAPI
     description: >-
       Providing brand data for the Internet which you can use in your other
-      apps.
+      applications.
   - aid: brand-api:brandfetch-logo-link-api
     name: Brandfetch Logo Link API
     humanURL: https://docs.brandfetch.com/docs/logo-link
