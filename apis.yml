@@ -5,9 +5,12 @@ apis:
     name: Brandfetch Brand API
     image: https://kinlane-productions2.s3.amazonaws.com/apis-json/apis-json-logo.jpg
     humanURL: https://docs.brandfetch.com/docs/brand-api
+    properties:
+      - url: properties/brandfetch-brand-api.yml
+        type: OpenAPI
     description: >-
-      Brand API enables developers to personalize their customer journey by
-      building unique branded experiences.
+      Providing brand data for the Internet that you can use in other
+      applications.
   - aid: brand-api:brandfetch-logo-link-api
     name: Brandfetch Logo Link API
     humanURL: https://docs.brandfetch.com/docs/logo-link
