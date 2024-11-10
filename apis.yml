@@ -8,7 +8,10 @@ apis:
     properties:
       - url: properties/brandfetch-brand-api.yml
         type: OpenAPI
-    description: Providing brand data which you can use in your other applications.
+    description: >-
+      Brand API provides programmatic access to any companys brand assets
+      through a single API call. This includes their latest logos, color
+      schemes, fonts, images, and other firmographic information.
   - aid: brand-api:brandfetch-logo-link-api
     name: Brandfetch Logo Link API
     humanURL: https://docs.brandfetch.com/docs/logo-link
