@@ -1,7 +1,10 @@
 openapi: 3.1.0
 info:
   title: Brandfetch Brand API
-  description: Providing brand data which you can use in your other applications.
+  description: >-
+    Brand API provides programmatic access to any companys brand assets through
+    a single API call. This includes their latest logos, color schemes, fonts,
+    images, and other firmographic information.
   version: '2.0'
 servers:
   - url: https://api.brandfetch.io/v2
