@@ -1,9 +1,7 @@
 openapi: 3.1.0
 info:
   title: Brandfetch Brand API
-  description: >-
-    Providing brand data for the Internet which you can use in your other
-    applications.
+  description: Providing brand data which you can use in your other applications.
   version: '2.0'
 servers:
   - url: https://api.brandfetch.io/v2
