@@ -9,7 +9,7 @@ apis:
       - url: properties/brandfetch-brand-api.yml
         type: OpenAPI
     description: >-
-      Providing brand data for the Internet that you can use in other
+      Providing brand data for the Internet which you can use in other
       applications.
   - aid: brand-api:brandfetch-logo-link-api
     name: Brandfetch Logo Link API
