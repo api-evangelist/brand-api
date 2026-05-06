@@ -1,5 +1,6 @@
 specification: FinOps Framework
 specificationVersion: '1.0'
+schema: https://www.finops.org/framework/
 alignedWith:
   framework: FinOps Foundation Framework
   frameworkUrl: https://www.finops.org/framework/
@@ -8,10 +9,11 @@ alignedWith:
   dataSpecUrl: https://focus.finops.org/focus-specification/v1-3/
 provider: Brand API (Brandfetch)
 providerId: brand-api
-publisherName: Brand API (Brandfetch)
-serviceCategory: API
+publisherName: Brandfetch
+serviceCategory: Brand Data API
 created: '2026-05-04'
-modified: '2026-05-04'
+modified: '2026-05-05'
+reconciled: true
 tags:
   - Brands
   - Logos
@@ -19,132 +21,66 @@ tags:
   - Company Data
   - Firmographics
   - FinOps
-  - Cost Management
   - FOCUS
-description: FinOps framework definition for the Brand API (Brandfetch) API surface. Provides a FOCUS-aligned
-  mapping for cost allocation, usage measurement, and unit-economics reporting across the provider's APIs.
-principles:
-  - name: Visibility
-    description: Make API consumption costs visible to engineering, product, and finance teams in near
-      real-time.
-  - name: Allocation
-    description: Tag every chargeable API call with the consuming team, environment, application, and
-      feature so cost can be allocated.
-  - name: Optimization
-    description: Continuously evaluate request patterns, caching, batching, and tier selection to reduce
-      cost per useful unit of work.
-  - name: Accountability
-    description: Establish budget owners and chargeback or showback flows for each consuming team.
-domains:
-  - name: Understand Usage and Cost
-    capabilities:
-      - Data Ingestion
-      - Allocation
-      - Reporting and Analytics
-      - Anomaly Management
-  - name: Quantify Business Value
-    capabilities:
-      - Planning and Estimating
-      - Forecasting
-      - Budgeting
-      - Benchmarking
-      - Unit Economics
-  - name: Optimize Usage and Cost
-    capabilities:
-      - Architecting for Cloud
-      - Rate Optimization
-      - Workload Optimization
-      - Cloud Sustainability
-      - Licensing and SaaS
-  - name: Manage the FinOps Practice
-    capabilities:
-      - FinOps Practice Operations
-      - FinOps Education and Enablement
-      - Invoicing and Chargeback
-      - Onboarding Workloads
-      - Intersecting Disciplines
+description: 'FOCUS-aligned FinOps for Brandfetch: a free Logo API with a soft 500K-monthly fair-use
+  ceiling, plus a flat $99/month Brand API subscription capped at 2,500 calls and Enterprise custom
+  plans for higher volume and SLA.'
+sources:
+  - https://brandfetch.com/developers/pricing
+  - https://docs.brandfetch.com/logo-api/rate-limits
 billingModel:
-  pricingCategory: Usage-Based
+  pricingCategory: Subscription
   billingFrequency: Monthly
   billingCurrency: USD
   chargeCategories:
-    - Usage
     - Purchase
     - Tax
-    - Credit
     - Adjustment
-  chargeFrequency: Recurring
 focusColumns:
-  ServiceName: Brand API (Brandfetch)
-  ServiceCategory: Developer Tools / API
-  ProviderName: Brand API (Brandfetch)
-  PublisherName: Brand API (Brandfetch)
-  InvoiceIssuerName: Brand API (Brandfetch)
-  PricingCategory: Usage-Based
-  PricingUnit: request
+  ServiceName: Brandfetch
+  ServiceCategory: Brand Data API
+  ProviderName: Brandfetch
+  PublisherName: Brandfetch
+  InvoiceIssuerName: Brandfetch
   BillingCurrency: USD
-  ChargeCategory: Usage
+  PricingCategory: Standard
+  PricingUnit: subscription-month
 meters:
-  - name: api_requests
-    description: Count of billable API requests
+  - name: logo_api_requests
+    description: Calls to the Logo API; metered for fair-use review against the 500K monthly soft cap.
     unit: request
     aggregation: sum
     dimensions:
-      - api
-      - endpoint
-      - tier
-      - region
-      - consumer
-  - name: data_egress
-    description: Bytes returned over the network in API responses
-    unit: GB
+      - domain
+      - api_key
+  - name: brand_api_calls
+    description: Calls to the Brand API; counted against the 2,500/month subscription cap.
+    unit: request
     aggregation: sum
     dimensions:
-      - api
-      - region
-      - consumer
-  - name: compute_seconds
-    description: Server-side compute consumed by the request, where applicable
-    unit: second
+      - domain
+      - api_key
+  - name: subscription_month
+    description: Brand API subscription fee billed monthly ($99/month, ~20% off annual).
+    unit: month
     aggregation: sum
     dimensions:
-      - api
-      - endpoint
-      - tier
-apis:
-  - name: Brandfetch Brand API
-    baseURL: ''
-    tags:
-      - Brands
-      - Logos
-      - Colors
-      - Fonts
-      - Firmographics
-    serviceName: Brandfetch Brand API
-    serviceCategory: API
-  - name: Brandfetch Logo Link API
-    baseURL: ''
-    tags:
-      - Logos
-      - CDN
-      - Brand Assets
-    serviceName: Brandfetch Logo Link API
-    serviceCategory: API
-  - name: Brandfetch Brand Search API
-    baseURL: ''
-    tags:
-      - Brand Search
-      - Autocomplete
-      - Domain Matching
-    serviceName: Brandfetch Brand Search API
-    serviceCategory: API
-unitEconomics:
-  - name: Cost per 1K Requests
-    metric: billed_cost / (api_requests / 1000)
-    target: TBD
-  - name: Cost per Active Consumer
-    metric: billed_cost / active_consumers
-    target: TBD
+      - plan
+      - billing_cycle
+principles:
+  - name: Visibility
+    description: Track Logo API request volume per consumer / domain and reconcile against the 500K
+      soft monthly ceiling and the 2,500 hard Brand API cap; pull invoices from the Brandfetch dashboard.
+  - name: Allocation
+    description: Issue separate API keys per consuming product or surface so logo and brand-data spend
+      can be attributed cleanly.
+  - name: Optimization
+    description: Cache logo URLs and brand records aggressively at the CDN / edge to stay within per-IP
+      and per-customer 5-minute throughput windows; reserve Brand API calls for surfaces that need rich
+      brand metadata; switch to Enterprise when sustained volume exceeds the Brand API hard cap.
+  - name: Accountability
+    description: Designate a brand-platform owner; alert when 5-minute or monthly thresholds approach
+      exhaustion; budget annual billing for the 20% discount on Brand API.
 maintainers:
-  - FN: API Evangelist
+  - FN: Kin Lane
     email: info@apievangelist.com

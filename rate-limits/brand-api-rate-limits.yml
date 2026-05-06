@@ -4,96 +4,58 @@ schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main
 provider: Brand API (Brandfetch)
 providerId: brand-api
 created: '2026-05-04'
-modified: '2026-05-04'
+modified: '2026-05-05'
+reconciled: true
 tags:
   - Brands
   - Logos
   - Brand Assets
-  - Company Data
-  - Firmographics
   - Rate Limiting
-  - Quotas
-  - Throttling
-description: Machine-readable rate limit definitions for the Brand API (Brandfetch) API surface. Captures
-  per-tier quotas, burst behavior, response signaling, and recovery semantics. Defaults are scaffold values
-  to be replaced with published provider limits.
-headers:
-  limit: X-RateLimit-Limit
-  remaining: X-RateLimit-Remaining
-  reset: X-RateLimit-Reset
-  retryAfter: Retry-After
-  policy: RateLimit-Policy
+description: Brandfetch enforces a soft 500,000 requests/month fair-use ceiling on the Logo API plus
+  hard 5-minute throughput windows scoped per IP and per customer. Overages on the throughput windows
+  return HTTP 429. The Brand API has a separate hard cap of 2,500 calls/month tied to its subscription.
+sources:
+  - https://docs.brandfetch.com/logo-api/rate-limits
+  - https://brandfetch.com/developers/pricing
 responseCodes:
   throttled: 429
-  quotaExceeded: 429
-  serviceUnavailable: 503
 limits:
-  - tier: free
-    name: Free Tier Default
-    scope: api-key
-    metric: requests_per_minute
-    limit: 10
-    burst: 20
-    timeFrame: minute
-    applies:
-      - Brandfetch Brand API
-      - Brandfetch Logo Link API
-      - Brandfetch Brand Search API
-  - tier: free
-    name: Free Tier Monthly Quota
-    scope: api-key
+  - name: Logo API monthly fair-use
+    scope: account
     metric: requests_per_month
-    limit: 1000
+    limit: 500000
     timeFrame: month
-    applies:
-      - Brandfetch Brand API
-      - Brandfetch Logo Link API
-      - Brandfetch Brand Search API
-  - tier: professional
-    name: Professional Tier Default
-    scope: api-key
-    metric: requests_per_minute
-    limit: 100
-    burst: 200
+    notes: Soft limit. Exceeding does not trigger immediate blocking.
+  - name: Logo API per-IP throughput
+    scope: ip
+    metric: requests_per_5_minutes
+    limit: 1000
     timeFrame: minute
-    applies:
-      - Brandfetch Brand API
-      - Brandfetch Logo Link API
-      - Brandfetch Brand Search API
-  - tier: professional
-    name: Professional Tier Monthly Quota
-    scope: api-key
+    notes: Hard 1,000 requests every 5 minutes per IP. 429 on overage.
+  - name: Logo API per-customer throughput
+    scope: account
+    metric: requests_per_5_minutes
+    limit: 2400
+    timeFrame: minute
+    notes: Hard 2,400 requests every 5 minutes per customer. 429 on overage.
+  - name: Brand API monthly cap
+    scope: account
     metric: requests_per_month
-    limit: 100000
+    limit: 2500
     timeFrame: month
-    applies:
-      - Brandfetch Brand API
-      - Brandfetch Logo Link API
-      - Brandfetch Brand Search API
-  - tier: enterprise
-    name: Enterprise Negotiated Limit
-    scope: contract
-    metric: requests_per_minute
-    limit: 1000
-    burst: 5000
-    timeFrame: minute
-    applies:
-      - Brandfetch Brand API
-      - Brandfetch Logo Link API
-      - Brandfetch Brand Search API
+    notes: Hard cap on $99/month Brand API subscription.
 policies:
   - name: Backoff Strategy
-    description: Clients should implement exponential backoff with jitter, honoring the Retry-After header
+    description: Apply exponential backoff with jitter on 429 responses; respect any Retry-After header
       when present.
-  - name: Burst Handling
-    description: Short bursts above the steady-state limit are tolerated up to the documented burst ceiling
-      before throttling engages.
-  - name: Quota Reset
-    description: Monthly quotas reset at the start of each calendar month in UTC. Per-minute and per-second
-      windows reset on a sliding-window basis.
-  - name: Fair Use
-    description: Even on uncapped enterprise tiers, sustained usage that materially impacts shared infrastructure
-      may be subject to fair-use throttling.
+  - name: Soft vs Hard Limits
+    description: The 500K monthly Logo API allowance is soft (fair-use); per-IP and per-customer 5-minute
+      throughput windows are hard limits.
+  - name: Caching
+    description: Cache logo and brand responses aggressively client-side to stay inside the 5-minute
+      throughput windows; Enterprise plans negotiate custom cache TTLs.
+  - name: Capacity Increase
+    description: Higher monthly volumes and SLAs require an Enterprise plan negotiated with Brandfetch.
 maintainers:
-  - FN: API Evangelist
+  - FN: Kin Lane
     email: info@apievangelist.com

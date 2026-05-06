@@ -4,145 +4,111 @@ schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main
 provider: Brand API (Brandfetch)
 providerId: brand-api
 created: '2026-05-04'
-modified: '2026-05-04'
+modified: '2026-05-05'
+reconciled: true
 tags:
   - Brands
   - Logos
   - Brand Assets
   - Company Data
   - Firmographics
-description: Machine-readable plans and pricing scaffold for this API provider. Conforms to the API Commons
-  Plans schema. Tier limits and prices are scaffold defaults; replace with provider-published values.
+description: Brandfetch ships two distinct APIs with separate pricing. The Logo API is free up to 500,000
+  requests/month with no attribution badge required. The Brand API (rich brand data) is sold as a flat
+  $99/month subscription capped at 2,500 calls/month, with a 20% discount when billed annually. Custom
+  Enterprise plans cover larger volumes, SLAs, and flexible caching.
+sources:
+  - https://brandfetch.com/developers/pricing
+  - https://docs.brandfetch.com/logo-api/rate-limits
 plans:
-  - id: brand-api-free
-    name: Free
+  - id: brand-api-logo-api-free
+    name: Logo API - Free
     type: freemium
-    description: Free entry tier for the Brand API (Brandfetch) API surface. Intended for evaluation,
-      prototyping, and low-volume integrations. Real limits and pricing must be reconciled with the provider's
-      published plan documentation.
+    description: Free Logo API access with a generous fair-use monthly allowance and no attribution
+      badge required.
     entries:
-      - label: API Requests
-        description: Monthly API request quota across all included endpoints
-        name: api_requests
+      - label: Logo API requests
+        name: logo_requests
         type: quota
-        metric: requests
-        limit: 1000
+        metric: request
+        limit: 500000
         timeFrame: month
         geo: global
-        domains: []
         unit: 1
-        price: '0.00'
-        userMultiplied: false
-      - label: Rate Limit
-        description: Maximum requests per minute on the free tier
-        name: rate_limit
-        type: rate
-        metric: requests_per_minute
-        limit: 10
-        timeFrame: minute
-        geo: global
-        domains: []
-        unit: 1
-        price: '0.00'
+        price: '0'
         userMultiplied: false
     elements:
-      - name: Public Documentation
-      - name: Community Support
-      - name: Sandbox Access
-      - name: Brandfetch Brand API
-      - name: Brandfetch Logo Link API
-      - name: Brandfetch Brand Search API
-  - id: brand-api-pro
-    name: Professional
-    type: paid
-    description: Production tier for Brand API (Brandfetch). Provides higher quotas, priority support,
-      and access to the broader API portfolio. Pricing placeholder; align with the provider's pricing
-      page.
+      - name: Logo API
+      - name: No "powered by" badge required
+  - id: brand-api-brand-api
+    name: Brand API
+    type: subscription
+    description: Rich brand data API at a flat monthly subscription with a hard call cap.
     entries:
-      - label: API Requests
-        description: Monthly API request quota
-        name: api_requests
+      - label: Subscription
+        name: subscription
+        type: subscription
+        metric: month
+        limit: 1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: $99/month
+        userMultiplied: false
+      - label: Subscription (annual billing)
+        name: subscription_annual
+        type: subscription
+        metric: month
+        limit: 1
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: 20% off annual (~$79.20/month equivalent)
+        userMultiplied: false
+      - label: Brand API calls
+        name: brand_api_calls
         type: quota
-        metric: requests
-        limit: 100000
+        metric: request
+        limit: 2500
         timeFrame: month
         geo: global
-        domains: []
         unit: 1
-        price: TBD
-        userMultiplied: false
-      - label: Rate Limit
-        description: Maximum requests per minute on the professional tier
-        name: rate_limit
-        type: rate
-        metric: requests_per_minute
-        limit: 100
-        timeFrame: minute
-        geo: global
-        domains: []
-        unit: 1
-        price: '0.00'
-        userMultiplied: false
-      - label: Overage
-        description: Per-request price after monthly quota is exceeded
-        name: overage
-        type: metered
-        metric: requests
-        limit: -1
-        timeFrame: month
-        geo: global
-        domains: []
-        unit: 1000
-        price: TBD
+        price: included
         userMultiplied: false
     elements:
-      - name: All Production Endpoints
-      - name: Email Support
-      - name: SLA Targets
-      - name: Webhook Subscriptions
-      - name: Brandfetch Brand API
-      - name: Brandfetch Logo Link API
-      - name: Brandfetch Brand Search API
+      - name: Brand API
+      - name: Rich Company Data
+      - name: Brand Assets
   - id: brand-api-enterprise
     name: Enterprise
     type: enterprise
-    description: Custom-negotiated tier for Brand API (Brandfetch). Includes dedicated capacity, contractual
-      SLAs, security review, data residency options, and named technical account management.
+    description: Custom plan for high-volume Logo or Brand API usage, with SLA and flexible caching
+      arrangements.
     entries:
-      - label: API Requests
-        description: Negotiated request volume; -1 indicates uncapped subject to fair use
-        name: api_requests
-        type: quota
-        metric: requests
-        limit: -1
+      - label: Custom subscription
+        name: enterprise_subscription
+        type: subscription
+        metric: month
+        limit: 1
         timeFrame: month
         geo: configurable
-        domains: []
         unit: 1
         price: custom
         userMultiplied: false
-      - label: Rate Limit
-        description: Negotiated burst and steady-state rate
-        name: rate_limit
-        type: rate
-        metric: requests_per_minute
-        limit: 1000
-        timeFrame: minute
+      - label: Custom volume
+        name: enterprise_volume
+        type: quota
+        metric: request
+        limit: -1
+        timeFrame: month
         geo: configurable
-        domains: []
         unit: 1
         price: custom
         userMultiplied: false
     elements:
-      - name: Unlimited / Negotiated Volume
-      - name: 24/7 Dedicated Support
-      - name: Contractual SLA
-      - name: Security & Compliance Review
-      - name: Dedicated Account Manager
-      - name: Custom Data Residency
-      - name: Brandfetch Brand API
-      - name: Brandfetch Logo Link API
-      - name: Brandfetch Brand Search API
+      - name: SLA
+      - name: Flexible Caching
+      - name: Logo API
+      - name: Brand API
 maintainers:
-  - FN: API Evangelist
+  - FN: Kin Lane
     email: info@apievangelist.com
