@@ -8,7 +8,7 @@ tags:
   - Company Data
   - Firmographics
 type: Index
-x-type: company
+kind: company
 image: https://kinlane-productions2.s3.amazonaws.com/apis-json-icons/brand-api-create-branded-experiences.png
 access: 3rd-Party
 created: '2024-03-30'
