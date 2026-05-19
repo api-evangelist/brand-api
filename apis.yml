@@ -77,6 +77,8 @@ apis:
       GET https://api.brandfetch.io/v2/search/:name. Authentication via Client ID
       query parameter. Free to use; no attribution required.
 common:
+  - type: LinkedIn
+    url: https://www.linkedin.com/company/brandfetch
   - url: https://brandfetch.com/developers/customers
     name: Customers
     type: Customers
