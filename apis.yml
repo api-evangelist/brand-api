@@ -119,10 +119,10 @@ common:
     type: Login
   - url: https://developers.brandfetch.com/register
     name: Sign Up
-    type: SignUp
+    type: Signup
   - url: https://docs.brandfetch.com/llms.txt
     name: LLMs Reference
-    type: LLMsTxt
+    type: LlmsText
 properties:
   - type: x-domain
     value: brandfetch.com
