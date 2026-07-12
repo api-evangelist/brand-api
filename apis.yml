@@ -77,6 +77,8 @@ apis:
       GET https://api.brandfetch.io/v2/search/:name. Authentication via Client ID
       query parameter. Free to use; no attribution required.
 common:
+  - type: DomainSecurity
+    url: security/brand-api-domain-security.yml
   - type: GitHubOrganization
     url: https://github.com/brandfetch
   - type: LinkedIn
