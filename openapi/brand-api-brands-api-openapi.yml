@@ -1,31 +1,30 @@
 openapi: 3.1.0
 info:
-  title: Brandfetch Brand API
-  description: >-
-    Brand API provides programmatic access to any companys brand assets through
-    a single API call. This includes their latest logos, color schemes, fonts,
-    images, and other firmographic information.
+  title: Brandfetch Brand Brands API
+  description: Brand API provides programmatic access to any companys brand assets through a single API call. This includes their latest logos, color schemes, fonts, images, and other firmographic information.
   version: '2.0'
 servers:
-  - url: https://api.brandfetch.io/v2
+- url: https://api.brandfetch.io/v2
+tags:
+- name: Brands
 paths:
   /brands/{domainOrId}:
     get:
       summary: Retrieve brand data by domain or ID
       description: Fetches data for a brand based on its domain or unique identifier.
       parameters:
-        - name: domainOrId
-          in: path
-          required: true
-          description: The domain or unique identifier of the brand
-          schema:
-            type: string
-        - name: Authorization
-          in: header
-          required: true
-          description: Bearer authentication header of the form `Bearer <token>`.
-          schema:
-            type: string
+      - name: domainOrId
+        in: path
+        required: true
+        description: The domain or unique identifier of the brand
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: true
+        description: Bearer authentication header of the form `Bearer <token>`.
+        schema:
+          type: string
       responses:
         '200':
           description: Successfully retrieved brand data
@@ -231,3 +230,5 @@ paths:
           description: Brand not found
         '429':
           description: Rate limit exceeded
+      tags:
+      - Brands
