@@ -9,6 +9,18 @@ tags:
   - Firmographics
 type: Index
 kind: company
+accessModel:
+  pricing: freemium
+  onboarding: unknown
+  trial: false
+  try_now: false
+  public: false
+  label: Freemium
+  confidence: medium
+  source:
+  - plans
+  generated: '2026-07-22'
+  method: derived
 image: https://kinlane-productions2.s3.amazonaws.com/apis-json-icons/brand-api-create-branded-experiences.png
 access: 3rd-Party
 created: '2024-03-30'
@@ -23,59 +35,46 @@ description: >-
   by matching brand names to their domains and identifiers. All APIs support Bearer
   token authentication with free access for development.
 apis:
-  - aid: brand-api:brandfetch-brand-api
-    name: Brandfetch Brand API
-    tags:
-      - Brands
-      - Logos
-      - Colors
-      - Fonts
-      - Firmographics
-    humanURL: https://docs.brandfetch.com/docs/brand-api
-    properties:
-      - url: openapi/brandfetch-brand-api.yml
-        type: OpenAPI
-      - url: https://docs.brandfetch.com/docs/brand-api
-        type: Documentation
-    description: >-
-      Brand API provides programmatic access to any company's brand assets through
-      a single API call. Returns the latest logos, color schemes, fonts, images,
-      and firmographic information. Supports lookup by domain (e.g. nike.com),
-      stock/ETF ticker (e.g. NKE), ISIN code, or crypto symbol (e.g. BTC).
-      Base endpoint: GET /v2/brands/{identifier}. Authentication via Bearer token.
-      Free sandbox testing available on the brandfetch.com domain.
-  - aid: brand-api:brandfetch-logo-link-api
-    name: Brandfetch Logo Link API
-    tags:
-      - Logos
-      - CDN
-      - Brand Assets
-    humanURL: https://docs.brandfetch.com/docs/logo-link
-    properties:
-      - url: https://docs.brandfetch.com/docs/logo-link
-        type: Documentation
-    description: >-
-      Logo Link delivers brand logos directly via CDN URL embedding. Supports
-      lookup by domain, stock ticker, crypto symbol, or ISIN. Parameters include
-      logo type (icon, symbol, logo), theme (light/dark), height/width, format
-      (webp, png, jpg, svg), and fallback behavior. Base CDN URL:
-      https://cdn.brandfetch.io/{identifier}?c=CLIENT_ID. Free with fair-use
-      rate limits; no attribution required.
-  - aid: brand-api:brandfetch-brand-search-api
-    name: Brandfetch Brand Search API
-    tags:
-      - Brand Search
-      - Autocomplete
-      - Domain Matching
-    humanURL: https://docs.brandfetch.com/docs/brand-search-api
-    properties:
-      - url: https://docs.brandfetch.com/docs/brand-search-api
-        type: Documentation
-    description: >-
-      Brand Search API matches brand names to their corresponding domain URLs
-      and unique identifiers, enabling rich autocomplete experiences. Endpoint:
-      GET https://api.brandfetch.io/v2/search/:name. Authentication via Client ID
-      query parameter. Free to use; no attribution required.
+- aid: brand-api:brandfetch-logo-link-api
+  name: Brandfetch Logo Link API
+  tags:
+  - Logos
+  - CDN
+  - Brand Assets
+  humanURL: https://docs.brandfetch.com/docs/logo-link
+  properties:
+  - url: https://docs.brandfetch.com/docs/logo-link
+    type: Documentation
+  description: >-
+    Logo Link delivers brand logos directly via CDN URL embedding. Supports lookup by domain, stock ticker,
+    crypto symbol, or ISIN. Parameters include logo type (icon, symbol, logo), theme (light/dark), height/width,
+    format (webp, png, jpg, svg), and fallback behavior. Base CDN URL: https://cdn.brandfetch.io/{identifier}?c=CLIENT_ID.
+    Free with fair-use rate limits; no attribution required.
+- aid: brand-api:brandfetch-brand-search-api
+  name: Brandfetch Brand Search API
+  tags:
+  - Brand Search
+  - Autocomplete
+  - Domain Matching
+  humanURL: https://docs.brandfetch.com/docs/brand-search-api
+  properties:
+  - url: https://docs.brandfetch.com/docs/brand-search-api
+    type: Documentation
+  description: >-
+    Brand Search API matches brand names to their corresponding domain URLs and unique identifiers, enabling
+    rich autocomplete experiences. Endpoint: GET https://api.brandfetch.io/v2/search/:name. Authentication
+    via Client ID query parameter. Free to use; no attribution required.
+- aid: brand-api:brand-api-brands-api
+  name: Brand API (Brandfetch) Brands API
+  description: The Brands API from Brand API (Brandfetch) — 1 operation(s) for brands.
+  humanURL: https://docs.brandfetch.com/docs/brand-api
+  tags:
+  - Brands
+  properties:
+  - type: OpenAPI
+    url: openapi/brand-api-brands-api-openapi.yml
+  - type: Documentation
+    url: https://docs.brandfetch.com/docs/brand-api
 common:
   - type: DomainSecurity
     url: security/brand-api-domain-security.yml
