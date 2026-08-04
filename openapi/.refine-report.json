@@ -1,0 +1,19 @@
+{
+  "provider": "brand-api",
+  "sources": [
+    "brandfetch-brand-api.yml"
+  ],
+  "outputs": [
+    "brand-api-brands-api-openapi.yml"
+  ],
+  "archived": [
+    "archived openapi/brandfetch-brand-api.yml"
+  ],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "brandfetch-brand-api.yml: tagged GET /brands/{domainOrId} -> Brands",
+    "brandfetch-brand-api.yml: declared missing tag: Brands"
+  ],
+  "skipped": []
+}
