@@ -7,6 +7,9 @@ tags:
   - Brand Assets
   - Company Data
   - Firmographics
+  - Brand Context
+  - Merchant Enrichment
+  - Agent Tools
 type: Index
 kind: company
 accessModel:
@@ -24,7 +27,7 @@ accessModel:
 image: https://kinlane-productions2.s3.amazonaws.com/apis-json-icons/brand-api-create-branded-experiences.png
 access: 3rd-Party
 created: '2024-03-30'
-modified: '2026-04-21'
+modified: '2026-08-14'
 position: Consuming
 description: >-
   Brandfetch provides programmatic access to brand assets and company data through
@@ -32,69 +35,206 @@ description: >-
   firmographic information for any company via domain, stock ticker, ISIN code, or
   crypto symbol. The Logo Link API serves logos via CDN with support for multiple
   formats, themes, and sizes. The Brand Search API enables autocomplete experiences
-  by matching brand names to their domains and identifiers. All APIs support Bearer
-  token authentication with free access for development.
+  by matching brand names to their domains and identifiers. The Brand Context API
+  returns an LLM-ready narrative profile — identity, positioning, voice and visual
+  style — for grounding agents, and the Transaction API resolves raw payment
+  descriptors into merchant identity. A hosted MCP server at mcp.brandfetch.io
+  exposes the same capabilities as seven agent tools over OAuth, and an Enterprise
+  GraphQL endpoint carries the account, webhook and brand-monitoring plane. REST
+  authenticates with Bearer API keys; the Logo and Search APIs use a public,
+  embeddable Client ID.
 apis:
+- aid: brand-api:brandfetch-api
+  name: Brandfetch API
+  description: >-
+    The consolidated Brandfetch REST API — nine operations spanning brand lookup by
+    domain, stock/ETF ticker, ISIN and crypto symbol, brand search, LLM-ready brand
+    context, transaction-to-merchant resolution, and credential introspection.
+    Harvested verbatim from the OpenAPI 3.0.1 document Brandfetch publishes at
+    docs.brandfetch.com/openapi.json.
+  humanURL: https://docs.brandfetch.com/reference/overview
+  baseURL: https://api.brandfetch.io
+  tags:
+  - Brands
+  - Brand Context
+  - Brand Search
+  - Merchant Enrichment
+  - Firmographics
+  properties:
+  - type: OpenAPI
+    url: openapi/brand-api-brandfetch-openapi.yml
+  - type: Overlay
+    url: overlays/brand-api-brandfetch-overlay.yaml
+  - type: Documentation
+    url: https://docs.brandfetch.com/delivery-methods/rest-api
+  - type: APIReference
+    url: https://docs.brandfetch.com/reference/overview
+- aid: brand-api:brandfetch-mcp
+  name: Brandfetch MCP Server
+  description: >-
+    Hosted, remote, streamable-HTTP MCP server exposing seven Brandfetch tools —
+    brand_search, get_brand, get_brand_context, enrich_transaction, build_logo_urls,
+    get_asset_base64 and send_feedback — to any MCP client. Authenticates with OAuth
+    2.1 (authorization_code + PKCE S256) or a bf1. bearer token. MCP requests draw on
+    the caller's Brand API quota.
+  humanURL: https://docs.brandfetch.com/mcp/overview
+  baseURL: https://mcp.brandfetch.io/mcp
+  tags:
+  - MCP
+  - Agent Tools
+  - Brands
+  properties:
+  - type: MCPServer
+    url: mcp/brand-api-mcp.yml
+  - type: ToolCrosswalk
+    url: mcp/brand-api-tool-crosswalk.yml
+  - type: Documentation
+    url: https://docs.brandfetch.com/mcp/overview
+  - type: SourceCode
+    url: https://github.com/Brandfetch/brandfetch-mcp-server
+- aid: brand-api:brandfetch-graphql
+  name: Brandfetch GraphQL API
+  description: >-
+    Enterprise GraphQL endpoint carrying the account plane the REST API does not
+    expose — organizations, API keys, request logs, quotas, billing, webhook
+    registration and delivery history, the industry/geography taxonomy, and the Brand
+    Police trademark-monitoring surface. Anonymous introspection is open and returned
+    the full 161-type schema on 2026-08-14; query execution is Enterprise-gated.
+  humanURL: https://docs.brandfetch.com/delivery-methods/graphql
+  baseURL: https://graphql.brandfetch.io
+  tags:
+  - GraphQL
+  - Account Management
+  - Webhooks
+  properties:
+  - type: GraphQL
+    url: graphql/brand-api-brandfetch.graphql
+  - type: Documentation
+    url: https://docs.brandfetch.com/delivery-methods/graphql
 - aid: brand-api:brandfetch-logo-link-api
   name: Brandfetch Logo Link API
   tags:
   - Logos
   - CDN
   - Brand Assets
-  humanURL: https://docs.brandfetch.com/docs/logo-link
+  humanURL: https://docs.brandfetch.com/logo-api/overview
+  baseURL: https://cdn.brandfetch.io
   properties:
-  - url: https://docs.brandfetch.com/docs/logo-link
+  - url: https://docs.brandfetch.com/logo-api/overview
     type: Documentation
+  - url: https://docs.brandfetch.com/logo-api/parameters
+    type: APIReference
   description: >-
     Logo Link delivers brand logos directly via CDN URL embedding. Supports lookup by domain, stock ticker,
     crypto symbol, or ISIN. Parameters include logo type (icon, symbol, logo), theme (light/dark), height/width,
     format (webp, png, jpg, svg), and fallback behavior. Base CDN URL: https://cdn.brandfetch.io/{identifier}?c=CLIENT_ID.
-    Free with fair-use rate limits; no attribution required.
+    Free with fair-use rate limits; no attribution required. It is a CDN URL contract rather than a REST
+    resource, which is why it carries no OpenAPI representation.
 - aid: brand-api:brandfetch-brand-search-api
   name: Brandfetch Brand Search API
   tags:
   - Brand Search
   - Autocomplete
   - Domain Matching
-  humanURL: https://docs.brandfetch.com/docs/brand-search-api
+  humanURL: https://docs.brandfetch.com/brand-search-api/overview
+  baseURL: https://api.brandfetch.io/v2
   properties:
-  - url: https://docs.brandfetch.com/docs/brand-search-api
+  - url: https://docs.brandfetch.com/brand-search-api/overview
     type: Documentation
+  - url: https://docs.brandfetch.com/reference/brand-search-api
+    type: APIReference
   description: >-
     Brand Search API matches brand names to their corresponding domain URLs and unique identifiers, enabling
     rich autocomplete experiences. Endpoint: GET https://api.brandfetch.io/v2/search/:name. Authentication
-    via Client ID query parameter. Free to use; no attribution required.
+    via Client ID query parameter. Free to use; no attribution required. Logo URLs it returns expire after
+    24 hours and must not be cached.
 - aid: brand-api:brand-api-brands-api
   name: Brand API (Brandfetch) Brands API
-  description: The Brands API from Brand API (Brandfetch) — 1 operation(s) for brands.
-  humanURL: https://docs.brandfetch.com/docs/brand-api
+  description: >-
+    The Brands API from Brand API (Brandfetch) — the tag-split refinement of the earlier
+    single-operation harvest, superseded by the full nine-operation spec on the
+    Brandfetch API entry above.
+  humanURL: https://docs.brandfetch.com/brand-api/overview
+  baseURL: https://api.brandfetch.io/v2
   tags:
   - Brands
   properties:
   - type: OpenAPI
     url: openapi/brand-api-brands-api-openapi.yml
   - type: Documentation
-    url: https://docs.brandfetch.com/docs/brand-api
+    url: https://docs.brandfetch.com/brand-api/overview
 common:
+  - type: Authentication
+    url: authentication/brand-api-authentication.yml
+  - type: OAuthScopes
+    url: scopes/brand-api-scopes.yml
   - type: DomainSecurity
     url: security/brand-api-domain-security.yml
+  - type: TrustCenter
+    url: security/brand-api-trust-center.yml
+  - type: Compliance
+    url: https://trust.brandfetch.com
+    name: Trust Center (SOC 2 Type 2)
+  - type: Conformance
+    url: conformance/brand-api-conformance.yml
+  - type: AgentCard
+    url: a2a/brand-api-a2a.yml
+  - type: AgentSkill
+    url: skills/_index.yml
+  - type: WellKnown
+    url: well-known/brand-api-well-known.yml
+  - type: LLMsTxt
+    url: llms/brand-api-llms.txt
+  - type: Packages
+    url: packages/brand-api-packages.yml
+  - type: Conventions
+    url: conventions/brand-api-conventions.yml
+  - type: ErrorCatalog
+    url: errors/brand-api-problem-types.yml
+  - type: DataModel
+    url: data-model/brand-api-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/brand-api-lifecycle.yml
+  - type: StatusPage
+    url: https://status.brandfetch.io
+    name: Service Status
+  - type: Plans
+    url: plans/brand-api-plans-pricing.yml
+  - type: RateLimits
+    url: rate-limits/brand-api-rate-limits.yml
+  - type: FinOps
+    url: finops/brand-api-finops.yml
+  - type: Sandbox
+    url: sandbox/brand-api-sandbox.yml
   - type: GitHubOrganization
     url: https://github.com/brandfetch
   - type: LinkedIn
     url: https://www.linkedin.com/company/brandfetch
+  - url: https://developers.brandfetch.com/
+    name: Developer Portal
+    type: DeveloperPortal
+  - url: https://docs.brandfetch.com/reference/overview
+    name: API Reference
+    type: APIReference
+  - url: https://docs.brandfetch.com/get-started
+    name: Getting Started
+    type: GettingStarted
+  - url: https://brandfetch.com/blog
+    name: Blog
+    type: Blog
   - url: https://brandfetch.com/developers/customers
     name: Customers
     type: Customers
   - url: https://brandfetch.com/developers/pricing
     name: Pricing
     type: Pricing
-  - url: https://docs.brandfetch.com/docs/getting-started
-    name: Getting Started
-    type: GettingStarted
-  - url: https://docs.brandfetch.com/docs/webhooks/overview
+  - url: asyncapi/brand-api-webhooks.yml
+    name: Webhook Catalog
+    type: Webhooks
+  - url: https://docs.brandfetch.com/delivery-methods/webhooks/overview
     name: Webhooks
     type: Webhooks
-  - url: https://docs.brandfetch.com/docs/webhooks/event-types
+  - url: https://docs.brandfetch.com/delivery-methods/webhooks/event-types
     name: Event Types
     type: EventTypes
   - url: https://docs.brandfetch.com/support/getting-help
@@ -103,48 +243,69 @@ common:
   - url: https://docs.brandfetch.com/support/report-inaccuracies
     name: Issues
     type: Issues
-  - url: https://docs.brandfetch.com/recipes/overview
-    name: Recipes
-    type: Recipes
-  - url: https://docs.brandfetch.com/reference/overview
-    name: Reference
-    type: Documentation
-  - url: https://docs.brandfetch.com/docs/brand-api#testing-sandbox
-    name: Sandbox
-    type: Sandbox
-  - url: https://docs.brandfetch.com/changelog/2024
+  - url: https://docs.brandfetch.com/integrations/overview
+    name: No-code Integrations
+    type: Integrations
+  - url: https://docs.brandfetch.com/use-cases/overview
+    name: Use Cases
+    type: UseCases
+  - url: changelog/brand-api-changelog.yml
     name: Change Log
     type: ChangeLog
+  - url: https://docs.brandfetch.com/changelog/overview
+    name: Change Log
+    type: ChangeLog
+  - url: https://docs.brandfetch.com/support/security-soc2
+    name: Security & SOC 2
+    type: SecurityOverview
+  - url: https://docs.brandfetch.com/support/terms-and-conditions
+    name: Terms and Conditions
+    type: TermsOfService
   - url: https://developers.brandfetch.com/
     name: Login
     type: Login
   - url: https://developers.brandfetch.com/register
     name: Sign Up
-    type: Signup
+    type: SignUp
   - url: https://docs.brandfetch.com/llms.txt
     name: LLMs Reference
-    type: LlmsText
+    type: LLMsTxt
 properties:
   - type: x-domain
     value: brandfetch.com
   - type: x-authentication
-    value: Bearer token (Brand API), Client ID query parameter (Logo Link, Search)
+    value: >-
+      Bearer API key (Brand API, Brand Context API, Transaction API, Viewer API);
+      public Client ID query parameter (Logo API, Brand Search API);
+      OAuth 2.1 + PKCE or bf1. bearer token (MCP server)
   - type: x-identifier-types
-    value: Domain, Stock/ETF ticker, ISIN code, Crypto symbol
+    value: Domain, Brand ID, Stock/ETF ticker, ISIN code, Crypto symbol
   - type: x-data-returned
-    value: Logos, color palettes, fonts, images, firmographic data
+    value: Logos, color palettes, fonts, images, firmographic data, brand context narratives
   - type: x-logo-formats
     value: WebP, PNG, JPG, SVG
   - type: x-logo-types
     value: icon, symbol, logo
   - type: x-logo-themes
     value: light, dark
+  - type: x-surfaces
+    value: >-
+      REST (api.brandfetch.io), Logo CDN (cdn.brandfetch.io),
+      MCP (mcp.brandfetch.io), GraphQL (graphql.brandfetch.io)
+  - type: x-enterprise-gated
+    value: GraphQL API, Webhooks, Transaction API
   - type: x-use-cases
     value: >-
       B2B personalization, brand asset retrieval, company data enrichment,
       financial platform logos, crypto app branding, multi-tenant SaaS branding,
-      brand autocomplete, CRM enrichment
+      brand autocomplete, CRM enrichment, transaction/merchant enrichment,
+      grounding LLMs and agents with brand context
 maintainers:
   - FN: API Evangelist
     email: info@apievangelist.com
 specificationVersion: '0.19'
+x-enrichment:
+  date: '2026-08-14'
+  status: enriched
+  artifacts_added: 28
+  pass: local-v1
