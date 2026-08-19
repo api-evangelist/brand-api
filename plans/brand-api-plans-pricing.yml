@@ -4,7 +4,17 @@ schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main
 provider: Brand API (Brandfetch)
 providerId: brand-api
 created: '2026-05-04'
-modified: '2026-05-05'
+# Provenance stamped 2026-08-11: this artifact was written by the API Evangelist
+# bulk sweep dated 2026-05-04, not harvested from the provider. See roadmap#35.
+# 2026-08-14 enrichment pass: the pricing page (https://brandfetch.com/developers/pricing)
+# returns HTTP 403 to every non-browser client — curl with and without a browser
+# User-Agent both blocked — so the paid tiers below could NOT be re-verified this round
+# and are left exactly as the 2026-05-04 sweep recorded them. What WAS confirmed from a
+# 200 provider page is the free developer plan (100 requests/month), added below with its
+# source. method stays `generated` because the tier structure is still unverified.
+method: generated
+modified: '2026-08-14'
+plan_count: 4
 reconciled: true
 tags:
   - Brands
@@ -18,8 +28,35 @@ description: Brandfetch ships two distinct APIs with separate pricing. The Logo 
   Enterprise plans cover larger volumes, SLAs, and flexible caching.
 sources:
   - https://brandfetch.com/developers/pricing
-  - https://docs.brandfetch.com/logo-api/rate-limits
+  - https://docs.brandfetch.com/logo-api/overview
+  - https://docs.brandfetch.com/mcp/overview
 plans:
+  - id: brand-api-free-developer
+    name: Free
+    type: freemium
+    method: searched
+    source: https://docs.brandfetch.com/mcp/overview
+    description: >-
+      Free developer account covering the Brand API and the MCP server. Confirmed
+      2026-08-14 from the provider's MCP documentation — "sign up for free; the free plan
+      includes 100 requests per month." MCP requests draw on the same quota as REST calls.
+      Overage billing cannot be enabled on the free tier.
+    entries:
+      - label: Brand API requests
+        name: brand_api_requests_free
+        type: quota
+        metric: request
+        limit: 100
+        timeFrame: month
+        geo: global
+        unit: 1
+        price: '0'
+        userMultiplied: false
+    elements:
+      - name: Brand API
+      - name: Brandfetch MCP
+      - name: Logo API
+      - name: Brand Search API
   - id: brand-api-logo-api-free
     name: Logo API - Free
     type: freemium

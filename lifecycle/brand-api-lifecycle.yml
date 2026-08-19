@@ -1,0 +1,59 @@
+generated: '2026-08-14'
+method: searched
+source: https://docs.brandfetch.com/changelog/overview
+sources:
+  - https://docs.brandfetch.com/changelog/overview
+  - https://docs.brandfetch.com/support/service-status
+  - https://status.brandfetch.io
+  - https://docs.brandfetch.com/logo-api/overview
+  - openapi/brand-api-brandfetch-openapi.yml
+versioning:
+  scheme: uri-path
+  current: v2
+  spec_version: '1.0.0'
+  docs: https://docs.brandfetch.com/reference/overview
+  note: >-
+    Every REST path is prefixed /v2. The OpenAPI's own info.version is 1.0.0 and does not
+    track the URI version. No version header, no date-pinned version train.
+deprecation:
+  policy_url: null
+  sunset_header: false
+  deprecation_header: false
+  note: >-
+    Brandfetch publishes NO deprecation policy and no RFC 8594 Sunset/Deprecation header
+    support. The one deprecation actually performed — the bare auto-detect route
+    /v2/brands/{identifier} being superseded by explicit /domain/, /ticker/, /isin/ and
+    /crypto/ routes in December 2025 — was announced only as a changelog "we recommend"
+    and the old route still works. It is labelled "Auto-detection (legacy)" in the docs
+    but is NOT marked `deprecated: true` in the OpenAPI.
+  soft_deprecations:
+    - operation: getBrandData
+      path: /v2/brands/{identifier}
+      status: legacy-but-supported
+      superseded_by: [getBrandDataByDomain, getBrandDataByTicker, getBrandDataByIsin, getBrandDataByCrypto]
+      announced: '2025-12'
+      source: https://docs.brandfetch.com/changelog/overview
+deprecated_operations: []
+sla:
+  url: null
+  uptime_target: null
+  note: >-
+    No public SLA. The Logo API docs state that SLA agreements, custom terms and flexible
+    caching are available on Enterprise plans only, negotiated case by case.
+status_page: https://status.brandfetch.io
+status_page_provider: BetterStack
+status_page_docs: https://docs.brandfetch.com/support/service-status
+changelog: https://docs.brandfetch.com/changelog/overview
+support: https://docs.brandfetch.com/support/getting-help
+maturity:
+  stage: general-availability
+  first_seen_changelog_entry: '2024-06'
+  latest_changelog_entry: '2026-07'
+  enterprise_gated_surfaces:
+    - GraphQL API
+    - Webhooks
+    - Transaction API
+x-evidence:
+  - {url: 'https://status.brandfetch.io', http_status: 200, note: 'BetterStack-hosted "Brandfetch status" page'}
+  - {url: 'https://docs.brandfetch.com/changelog/overview', http_status: 200, note: 'dated changelog, 12 entries 2024-06 to 2026-07'}
+  - {url: 'https://docs.brandfetch.com/support/service-status', http_status: 200}

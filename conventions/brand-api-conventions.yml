@@ -1,0 +1,122 @@
+generated: '2026-08-14'
+method: searched
+source: https://docs.brandfetch.com/get-started
+sources:
+  - https://docs.brandfetch.com/logo-api/overview
+  - https://docs.brandfetch.com/logo-api/parameters
+  - https://docs.brandfetch.com/delivery-methods/rest-api
+  - https://docs.brandfetch.com/delivery-methods/webhooks/overview
+  - https://docs.brandfetch.com/delivery-methods/webhooks/delivery-behaviors
+  - https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md
+  - openapi/brand-api-brandfetch-openapi.yml
+authentication:
+  styles:
+    - name: bearer-api-key
+      applies_to: [Brand API, Brand Context API, Transaction API, Viewer API]
+      transport: 'Authorization: Bearer <api_key> header'
+      spec_scheme: bearerAuth
+    - name: client-id-query
+      applies_to: [Logo API, Brand Search API]
+      transport: '?c=<client_id> query parameter'
+      note: >-
+        The Client ID is a public, embeddable identifier — it appears in the `src` of an
+        <img> tag — and is not a secret. It exists for fair-use attribution and rate-limit
+        scoping, not for authorization.
+    - name: oauth2
+      applies_to: [MCP server]
+      transport: 'OAuth 2.1 authorization_code + PKCE (S256), or a bf1. bearer token'
+      see: mcp/brand-api-mcp.yml
+  credential_introspection:
+    operation: getViewer
+    path: GET /v2/viewer
+    note: 'Returns whether the presented credential is an API key or a user session, so a client can validate setup.'
+  see: authentication/brand-api-authentication.yml
+idempotency:
+  supported: true
+  mechanism: http-method-semantics
+  header: null
+  note: >-
+    Brandfetch publishes NO idempotency-key header and none appears in the OpenAPI.
+    Eight of its nine REST operations are GET and therefore idempotent by HTTP semantics;
+    the ninth, POST /v2/brands/transaction, is a lookup that creates no resource and
+    returns the same brand for the same transaction label, so retrying it is safe. There
+    is no write surface in the public REST API for an idempotency key to protect. Agents
+    should retry any operation freely on 429/5xx with backoff.
+  caveat: >-
+    This is idempotency by absence of mutation, NOT a published idempotency contract.
+    Do not read it as an Idempotency-Key implementation.
+pagination:
+  supported: false
+  note: >-
+    No REST operation is paginated — every response is a single brand object, a single
+    context object, or the full (unpaged) search result array. The GraphQL account plane
+    DOES use Relay cursor connections (PageInfo, *Connection/*Edge types with first/after)
+    but that surface is Enterprise-only.
+  graphql_style: relay-cursor
+field_expansion:
+  supported: false
+  related:
+    - {param: allowNsfw, in: query, applies_to: 'all five getBrandData* operations', type: boolean}
+    - {param: cachedOnly, in: query, applies_to: getBrandContext, type: boolean, default: false,
+       note: 'true returns 204 instead of resolving an uncached domain live'}
+content_negotiation:
+  supported: true
+  note: >-
+    GET /v2/context/{domain} honours the Accept header: application/json returns the
+    structured BrandContextResponse, text/markdown returns an LLM-ready markdown document.
+    This is the only content-negotiated operation.
+metadata:
+  supported: false
+  note: 'No customer-supplied metadata field; Brandfetch returns its own data only.'
+request_tracing:
+  header: null
+  note: >-
+    No request-id header is documented. Responses traverse AWS API Gateway/CloudFront and
+    carry x-amzn-requestid / x-amz-cf-id, but Brandfetch does not document either as a
+    support-correlation identifier. Support asks for the request URL and the brand
+    instead.
+versioning:
+  scheme: uri-path
+  current: v2
+  note: 'All REST paths are prefixed /v2. No version header, no date-pinned train.'
+  see: lifecycle/brand-api-lifecycle.yml
+error_envelope:
+  format: proprietary
+  shape: '{"message": "<string>"}'
+  problem_json: false
+  note: >-
+    A single `message` string; not RFC 9457, no `type`/`title`/`detail`/`instance`, no
+    machine-readable error code. Message values are a fixed enum in the spec — see
+    errors/brand-api-problem-types.yml.
+rate_limit_signaling:
+  response_headers:
+    - {name: x-api-key-quota, meaning: 'Quota allotted to the API key'}
+    - {name: x-api-key-approximate-usage, meaning: 'Approximate usage consumed against that quota'}
+  exhaustion_status: 429
+  retry_after: undocumented
+  note: >-
+    The two quota headers are named in Brandfetch's own published Agent Skill
+    verification checklist. No standard RateLimit-* / X-RateLimit-* headers and no
+    documented Retry-After. See rate-limits/brand-api-rate-limits.yml.
+caching:
+  note: >-
+    Logo CDN URLs returned by the Brand Search API expire after 24 hours and must not be
+    cached. Programmatic download/caching of Logo API assets is prohibited by the usage
+    guidelines and can trigger blocking; caching arrangements are negotiated on Enterprise
+    plans. Logo <img> embeds require a Referer header and a Referrer-Policy of origin,
+    origin-when-cross-origin, strict-origin, strict-origin-when-cross-origin, or unsafe-url.
+identifier_resolution:
+  explicit_routes: [domain, ticker, isin, crypto]
+  legacy_auto_detect_order: [domain, ticker, isin, crypto]
+  note: >-
+    The bare /v2/brands/{identifier} route auto-detects in that order and can mis-resolve
+    a ticker that looks like a domain. Brandfetch recommends the explicit type routes.
+webhooks:
+  spec: 'Standard Webhooks 1.0.0'
+  see: asyncapi/brand-api-webhooks.yml
+cross_links:
+  errors: errors/brand-api-problem-types.yml
+  lifecycle: lifecycle/brand-api-lifecycle.yml
+  authentication: authentication/brand-api-authentication.yml
+  rate_limits: rate-limits/brand-api-rate-limits.yml
+  data_model: data-model/brand-api-data-model.yml

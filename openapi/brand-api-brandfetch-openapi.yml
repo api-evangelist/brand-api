@@ -1,0 +1,1417 @@
+# Harvested verbatim from https://docs.brandfetch.com/openapi.json on 2026-08-14 (HTTP 200).
+# Serialized JSON -> YAML with no content changes. Verbatim JSON: openapi/_original/brandfetch-api-openapi.json
+openapi: 3.0.1
+info:
+  title: Brandfetch API
+  description: Our APIs help you personalize your customer journey through unique branded experiences.
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+- url: https://api.brandfetch.io
+paths:
+  /v2/brands/{identifier}:
+    get:
+      summary: Get brand data
+      description: Get brand data using a Domain, Brand ID, ISIN, Stock/ETF ticker, or Crypto symbol
+      operationId: getBrandData
+      tags:
+      - brands
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: identifier
+        in: path
+        description: 'Identifier to retrieve brand data. Accepted formats:
+
+
+          - **Domain:** `nike.com`
+
+          - **Brand ID:** `id_0dwKPKT`
+
+          - **Stock or ETF ticker:** `NKE`
+
+          - **ISIN:** `US6541061031`
+
+          - **Crypto symbol:** `BTC`, `ETH`
+
+
+          **Note:** When using this generic endpoint, the identifier is resolved in the following order: `domain` → `ticker`
+          → `isin` → `crypto`. To avoid naming collisions, use explicit type routes: `/v2/brands/{type}/{identifier}` where
+          `type` can be `domain`, `ticker`, `isin`, or `crypto`.'
+        required: true
+        schema:
+          type: string
+        examples:
+          domain:
+            summary: Domain
+            value: nike.com
+          brandId:
+            summary: Brand ID
+            value: id_0dwKPKT
+          ISIN:
+            summary: ISIN
+            value: US6541061031
+          stockSymbol:
+            summary: Stock or ETF ticker
+            value: NKE
+          cryptoSymbol:
+            summary: Crypto symbol
+            value: BTC
+      - name: allowNsfw
+        in: query
+        required: false
+        description: 'Brandfetch evaluates brands for NSFW content and reserves the right to not return inappropriate brands.
+          Depending on the severity, a brand may either not be returned at all (`404`), or be returned with its `isNsfw` property
+          set to `true`. The `allowNsfw` query parameter lets you control this behavior:
+
+
+          - **Not set** (default) — Some NSFW brands are not returned (`404`), others are returned with `isNsfw: true`.
+
+          - **`true`** — Returns the brand regardless of its NSFW status.
+
+          - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Successful request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '404':
+          description: <Not Found> or <Invalid Domain Name>
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - <Not Found> or <Invalid Domain Name>
+        '429':
+          description: API key quota exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - API key quota exceeded
+  /v2/brands/domain/{domain}:
+    get:
+      summary: Get brand data by domain
+      description: Get brand data using a domain name
+      operationId: getBrandDataByDomain
+      tags:
+      - brands
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: domain
+        in: path
+        description: Domain name (e.g., `nike.com`)
+        required: true
+        schema:
+          type: string
+        examples:
+          domain:
+            summary: Domain
+            value: nike.com
+      - name: allowNsfw
+        in: query
+        required: false
+        description: 'Brandfetch evaluates brands for NSFW content and reserves the right to not return inappropriate brands.
+          Depending on the severity, a brand may either not be returned at all (`404`), or be returned with its `isNsfw` property
+          set to `true`. The `allowNsfw` query parameter lets you control this behavior:
+
+
+          - **Not set** (default) — Some NSFW brands are not returned (`404`), others are returned with `isNsfw: true`.
+
+          - **`true`** — Returns the brand regardless of its NSFW status.
+
+          - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Successful request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '404':
+          description: <Not Found> or <Invalid Domain Name>
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - <Not Found> or <Invalid Domain Name>
+        '429':
+          description: API key quota exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - API key quota exceeded
+  /v2/brands/ticker/{ticker}:
+    get:
+      summary: Get brand data by Stock or ETF ticker
+      description: Get brand data using a Stock or ETF ticker
+      operationId: getBrandDataByTicker
+      tags:
+      - brands
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: ticker
+        in: path
+        description: Stock or ETF ticker (e.g., `NKE`, `QQQ`)
+        required: true
+        schema:
+          type: string
+        examples:
+          ticker:
+            summary: Stock or ETF ticker
+            value: NKE
+      - name: allowNsfw
+        in: query
+        required: false
+        description: 'Brandfetch evaluates brands for NSFW content and reserves the right to not return inappropriate brands.
+          Depending on the severity, a brand may either not be returned at all (`404`), or be returned with its `isNsfw` property
+          set to `true`. The `allowNsfw` query parameter lets you control this behavior:
+
+
+          - **Not set** (default) — Some NSFW brands are not returned (`404`), others are returned with `isNsfw: true`.
+
+          - **`true`** — Returns the brand regardless of its NSFW status.
+
+          - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Successful request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '404':
+          description: <Not Found>
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - <Not Found>
+        '429':
+          description: API key quota exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - API key quota exceeded
+  /v2/brands/isin/{isin}:
+    get:
+      summary: Get brand data by ISIN
+      description: Get brand data using an ISIN code
+      operationId: getBrandDataByIsin
+      tags:
+      - brands
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: isin
+        in: path
+        description: ISIN code (e.g., `US6541061031`)
+        required: true
+        schema:
+          type: string
+        examples:
+          isin:
+            summary: ISIN
+            value: US6541061031
+      - name: allowNsfw
+        in: query
+        required: false
+        description: 'Brandfetch evaluates brands for NSFW content and reserves the right to not return inappropriate brands.
+          Depending on the severity, a brand may either not be returned at all (`404`), or be returned with its `isNsfw` property
+          set to `true`. The `allowNsfw` query parameter lets you control this behavior:
+
+
+          - **Not set** (default) — Some NSFW brands are not returned (`404`), others are returned with `isNsfw: true`.
+
+          - **`true`** — Returns the brand regardless of its NSFW status.
+
+          - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Successful request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '404':
+          description: <Not Found> or <Invalid ISIN>
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - <Not Found> or <Invalid ISIN>
+        '429':
+          description: API key quota exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - API key quota exceeded
+  /v2/brands/crypto/{symbol}:
+    get:
+      summary: Get brand data by crypto symbol
+      description: Get brand data using a crypto symbol
+      operationId: getBrandDataByCrypto
+      tags:
+      - brands
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: symbol
+        in: path
+        description: Crypto symbol (e.g., `BTC`, `ETH`). Uppercase preferred.
+        required: true
+        schema:
+          type: string
+        examples:
+          crypto:
+            summary: Crypto symbol
+            value: BTC
+      - name: allowNsfw
+        in: query
+        required: false
+        description: 'Brandfetch evaluates brands for NSFW content and reserves the right to not return inappropriate brands.
+          Depending on the severity, a brand may either not be returned at all (`404`), or be returned with its `isNsfw` property
+          set to `true`. The `allowNsfw` query parameter lets you control this behavior:
+
+
+          - **Not set** (default) — Some NSFW brands are not returned (`404`), others are returned with `isNsfw: true`.
+
+          - **`true`** — Returns the brand regardless of its NSFW status.
+
+          - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Successful request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '404':
+          description: <Not Found> or <Invalid Crypto Symbol>
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - <Not Found> or <Invalid Crypto Symbol>
+        '429':
+          description: API key quota exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - API key quota exceeded
+  /v2/search/{name}?c={clientId}:
+    get:
+      summary: Search brands
+      description: Search for brands by name, login to get a clientId
+      operationId: searchBrands
+      parameters:
+      - name: name
+        in: path
+        description: The name of the company you are searching for.
+        required: true
+        schema:
+          type: string
+      - name: c
+        in: query
+        description: A clientId is a unique identifier assigned to your application that allows it to authenticate and interact
+          with our service. [Get your client ID here](https://developers.brandfetch.com)
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns brand data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    icon:
+                      type: string
+                      description: Brand icon URL
+                      nullable: true
+                    name:
+                      type: string
+                      description: Brand name
+                      nullable: true
+                    domain:
+                      type: string
+                      description: Brand website URL
+                      nullable: false
+                    claimed:
+                      type: boolean
+                      description: Set to true if the owner of the brand claimed its brand profile on [Brandfetch](https://brandfetch.com)
+                    brandId:
+                      type: string
+                      description: Unique identifier for the brand
+  /v2/context/{domain}:
+    get:
+      summary: Get brand context by domain
+      description: Get a structured, narrative-rich brand context for a domain — including identity, positioning, voice, and
+        visual style.
+      operationId: getBrandContext
+      tags:
+      - context
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: domain
+        in: path
+        description: Domain name (e.g., `brandfetch.com`)
+        required: true
+        schema:
+          type: string
+        examples:
+          domain:
+            summary: Domain
+            value: brandfetch.com
+      - name: cachedOnly
+        in: query
+        description: When `true`, return a brand context only if one is already cached, responding instantly without crawling
+          the domain. If no cached context exists, the API responds with `204 No Content` instead of resolving the domain
+          live (which can take several seconds). Useful for latency-sensitive use cases. Any value other than `true` (including
+          omitting the parameter) keeps the default behaviour of resolving the domain live on a cache miss. Defaults to `false`.
+        required: false
+        schema:
+          type: boolean
+          default: false
+        examples:
+          cachedOnly:
+            summary: Cached only (skip crawling)
+            value: true
+      responses:
+        '200':
+          description: 'Successful request. The response format is determined by the `Accept` header: `application/json` returns
+            a structured JSON object, while `text/markdown` returns the brand context as Markdown.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandContextResponse'
+            text/markdown:
+              schema:
+                type: string
+                description: The brand context rendered as Markdown.
+        '204':
+          description: Returned when `cachedOnly=true` and no brand context is currently cached for the domain. The response
+            body is empty. Because crawling is disabled there is nothing to return. Retry without `cachedOnly` to resolve
+            the domain live.
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '404':
+          description: Returned when the brand context could not be resolved. This may mean the domain was not found or is
+            invalid, or that we were unable to crawl the domain (e.g. due to DNS resolution issues, anti-botting protections,
+            or because the request could not be processed in the allotted time).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - <Not Found> or <Invalid Domain Name>
+        '429':
+          description: API key quota exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - API key quota exceeded
+  /v2/brands/transaction:
+    post:
+      summary: Get brand data from a transaction
+      description: Turn payment transactions into merchant data
+      operationId: getBrandFromTransaction
+      tags:
+      - brands
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactionLabel:
+                  type: string
+                  description: The raw transaction text.
+                  example: STARBUCKS 1523 OMAHA NE
+                countryCode:
+                  type: string
+                  description: An ISO 3166-1 alpha-2 country code indicating the country where the transaction took place.
+                  example: US
+              required:
+              - transactionLabel
+              - countryCode
+      responses:
+        '200':
+          description: Successful request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Not Found
+        '429':
+          description: API key quota exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - API key quota exceeded
+  /v2/viewer:
+    get:
+      summary: Get the authenticated viewer
+      description: 'Returns the identity of the credential used to authenticate the request: an API key or a user session
+        token (JWT). Use it to verify a credential during integration setup (a `200` response means the credential is valid;
+        `401`/`403` means it is missing, unknown, or revoked) and to display which API key and organization are connected.
+        Requests to this endpoint are free: they never consume API credits.'
+      operationId: getViewer
+      tags:
+      - viewer
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: The presented credential is valid. The `type` property indicates which kind of credential authenticated
+            the request and determines the response shape.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ViewerApiKeyResponse'
+                - $ref: '#/components/schemas/ViewerUserResponse'
+                discriminator:
+                  propertyName: type
+                  mapping:
+                    api-key: '#/components/schemas/ViewerApiKeyResponse'
+                    user: '#/components/schemas/ViewerUserResponse'
+              examples:
+                apiKey:
+                  summary: Authenticated with an API key
+                  value:
+                    type: api-key
+                    id: id5ZQvmz9A
+                    urn: urn:brandfetch:organization:cl5s9fps1275071ol9h7gs072m:api-key:id5ZQvmz9A
+                    name: Production key
+                    createdAt: '2026-05-12T09:14:07.000Z'
+                    usage:
+                      used: 1234
+                      quota: 250000
+                    organization:
+                      id: cl5s9fps1275071ol9h7gs072m
+                      urn: urn:brandfetch:organization:cl5s9fps1275071ol9h7gs072m
+                      name: Acme Inc.
+                user:
+                  summary: Authenticated with a user session token
+                  value:
+                    type: user
+                    id: cl2xkl6h90007w135197r5abc
+                    urn: urn:brandfetch:user:cl2xkl6h90007w135197r5abc
+                    name: Jane Doe
+                    email: jane@acme.com
+                    createdAt: '2025-11-02T16:41:12.000Z'
+        '401':
+          description: Unauthorized. The Authorization header is missing or the credential could not be resolved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '403':
+          description: Forbidden. The credential was rejected, e.g. a revoked API key or an expired session token.
+components:
+  schemas:
+    ViewerApiKeyResponse:
+      type: object
+      title: API key
+      description: The authenticated API key.
+      required:
+      - type
+      - id
+      - urn
+      - name
+      - createdAt
+      - usage
+      - organization
+      properties:
+        type:
+          type: string
+          enum:
+          - api-key
+          description: The kind of credential that authenticated the request.
+        id:
+          type: string
+          description: Id of the API key.
+        urn:
+          type: string
+          description: URN of the API key, e.g. `urn:brandfetch:organization:{organization.id}:api-key:{id}`.
+        name:
+          type: string
+          nullable: true
+          description: Display name of the API key, as set in the dashboard.
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the API key was created.
+        usage:
+          type: object
+          description: API credit consumption for the current billing period, mirroring the `x-api-key-quota` and `x-api-key-approximate-usage`
+            response headers of billable endpoints. Because this endpoint is free, `used` is the exact count, not approximated
+            one ahead like the header.
+          required:
+          - used
+          - quota
+          properties:
+            used:
+              type: integer
+              description: API credits consumed so far in the current billing period.
+            quota:
+              type: integer
+              description: API credit allowance for the current billing period.
+        organization:
+          type: object
+          description: The organization the API key belongs to.
+          required:
+          - id
+          - urn
+          - name
+          properties:
+            id:
+              type: string
+              description: Id of the organization.
+            urn:
+              type: string
+              description: URN of the organization, e.g. `urn:brandfetch:organization:{id}`.
+            name:
+              type: string
+              nullable: true
+              description: Display name of the organization.
+    ViewerUserResponse:
+      type: object
+      title: User
+      description: The authenticated user (dashboard session token).
+      required:
+      - type
+      - id
+      - urn
+      - name
+      - email
+      - createdAt
+      properties:
+        type:
+          type: string
+          enum:
+          - user
+          description: The kind of credential that authenticated the request.
+        id:
+          type: string
+          description: Id of the user.
+        urn:
+          type: string
+          description: URN of the user, e.g. `urn:brandfetch:user:{id}`.
+        name:
+          type: string
+          nullable: true
+          description: Full name of the user.
+        email:
+          type: string
+          nullable: true
+          description: Email address of the user.
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the user account was created.
+    Location:
+      type: object
+      description: Company's headquarter information
+      properties:
+        city:
+          type: string
+          description: Headquarter city
+          nullable: true
+        country:
+          type: string
+          description: Headquarter country
+          nullable: true
+        countryCode:
+          type: string
+          description: Headquarter country code (ISO 3166-1 alpha-2)
+          nullable: true
+        region:
+          type: string
+          description: Headquarter region
+          nullable: true
+        state:
+          type: string
+          description: Headquarter state
+          nullable: true
+        subregion:
+          type: string
+          description: Headquarter subregion
+          nullable: true
+    Industry:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the industry
+        score:
+          type: number
+          format: float
+          description: Score between 0-1 about the confidence in the industry
+        slug:
+          type: string
+          description: URL friendly identifier
+        name:
+          type: string
+          description: Name of the industry
+        emoji:
+          type: string
+          description: An emoji for the industry
+        parent:
+          description: If the object is a sub-category, the parent industry
+          items:
+            $ref: '#/components/schemas/IndustryParent'
+          nullable: true
+    IndustryParent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the industry
+        slug:
+          type: string
+          description: URL friendly identifier
+        name:
+          type: string
+          description: Name of the industry
+        emoji:
+          type: string
+          description: An emoji for the industry
+    Format:
+      type: object
+      properties:
+        src:
+          type: string
+          description: File source
+        format:
+          type: string
+          enum:
+          - svg
+          - webp
+          - png
+          - jpeg
+          description: File format
+        height:
+          type: integer
+          nullable: true
+          description: File height in pixels
+        width:
+          type: integer
+          nullable: true
+          description: File width in pixels
+        size:
+          type: integer
+          description: File size in bytes
+        background:
+          type: string
+          enum:
+          - transparent
+          nullable: true
+          description: Indicates if the file has a transparent background
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          enum:
+          - Error message.
+    BrandResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the brand
+          nullable: false
+        name:
+          type: string
+          description: Brand name
+          nullable: true
+        domain:
+          type: string
+          description: Brand website URL
+          nullable: false
+        claimed:
+          type: boolean
+          description: Set to true if the owner of the brand claimed its brand profile on [Brandfetch](https://brandfetch.com)
+          nullable: false
+        description:
+          type: string
+          description: Brand description
+          nullable: true
+        longDescription:
+          type: string
+          description: Brand long description
+          nullable: true
+        links:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Name of the social media platform
+                nullable: false
+                enum:
+                - twitter
+                - facebook
+                - instagram
+                - github
+                - youtube
+                - linkedin
+                - crunchbase
+              url:
+                type: string
+                description: URL of the social media profile
+                nullable: false
+          description: Social media links of the brand
+          nullable: false
+        logos:
+          type: array
+          items:
+            type: object
+            properties:
+              theme:
+                type: string
+                description: 'See logo theme. Possible values:
+
+                  - **dark**: A dark logo should be displayed on a light background (e.g. #ffffff)
+
+                  - **light**: A light logo should be displayed on a dark background (e.g. #000000)'
+                nullable: true
+                enum:
+                - dark
+                - light
+                - null
+              formats:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Format'
+                description: A list of format objects containing files in different formats
+                nullable: false
+              tags:
+                type: array
+                items:
+                  type: object
+                  properties: {}
+                description: 'A list of string attached to the logo. For example, if the logo icon is "photographic" rather
+                  than a logomark. Possible values:
+
+                  - **photographic**: The asset image is photographic in nature. For example, if this tag is present on an
+                  icon or Logo asset, it means the image has photographic qualities and is likely not a typical brand logotype
+                  or logomark graphic.
+
+                  - **portrait**: The asset image is a portrait or portrait-like. This is often the case when a sole proprietorship
+                  or small brand uses a self portrait as their logo or icon.'
+                nullable: false
+              type:
+                type: string
+                description: 'See logo type. Possible values:
+
+                  - **icon**: The icon that is used on social profiles (e.g. [Tesla''s social icon](https://cdn.brandfetch.io/tesla.com/icon))
+
+                  - **logo**: The horizontal logo, seen on large surfaces (e.g. [Tesla''s logo](https://asset.brandfetch.io/id2S-kXbuK/idAJ5NMLPG.svg))
+
+                  - **symbol**: The universal mark that abstractly represents the brand (e.g. [Tesla''s T symbol](https://asset.brandfetch.io/id2S-kXbuK/idM-t614MT.svg))
+
+                  - **other**: Other is used to refer to any type of logo that is not the primary one. (e.g. Amazon Kindle
+                  Logo)'
+                nullable: false
+                enum:
+                - icon
+                - logo
+                - symbol
+                - other
+          description: Logos, symbols & icons of the brand
+          nullable: false
+        colors:
+          type: array
+          items:
+            type: object
+            properties:
+              hex:
+                type: string
+                description: Color HEX code
+                nullable: false
+              type:
+                type: string
+                description: 'Type of the color. Possible values:
+
+                  - **accent**: The main color that represents the brand (used to draw attention e.g. call to action button)
+
+                  - **dark**: The darker color of the brand (used for surfaces or backgrounds)
+
+                  - **light**: The lighter color of the brand (used for surfaces or backgrounds)
+
+                  - **brand**: The full-color scheme of the brand (used to create color palettes users can pick from)'
+                nullable: false
+                enum:
+                - accent
+                - dark
+                - light
+                - brand
+              brightness:
+                type: number
+                description: Color brightness. Calculated based on the standard formula 0.2126*R + 0.7152*G + 0.0722*B
+                nullable: false
+                format: float
+          description: Accent, dark, light & palette colors of the brand
+          nullable: false
+        fonts:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Font family
+                nullable: true
+              type:
+                type: string
+                description: Font type
+                nullable: false
+                enum:
+                - title
+                - body
+              origin:
+                type: string
+                description: 'See font origin. Possible values:
+
+                  - **google**: The font that''s hosted on Google Font
+
+                  - **custom**: The font that has been uploaded by the brand itself
+
+                  - **system**: The font that''s already installed on the user''s operating system (see example)'
+                enum:
+                - google
+                - custom
+                - system
+              originId:
+                type: string
+                description: Font origin ID
+                nullable: true
+              weights:
+                type: array
+                items:
+                  type: object
+                  properties: {}
+          description: Title & body fonts of the brand
+          nullable: false
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              formats:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Format'
+                description: Available formats of the image
+                nullable: false
+              tags:
+                type: array
+                items:
+                  type: object
+                  properties: {}
+                description: Tags associated with the image
+                nullable: false
+              type:
+                type: string
+                description: Image type
+                nullable: false
+                enum:
+                - banner
+                - other
+          description: Banner & other images of the brand
+          nullable: false
+        qualityScore:
+          type: number
+          description: 'Score between 0-1 which indicates the quality of the data for the given brand. Useful when you don''t
+            want to show lower quality brands to your users.
+
+
+            Lower 3rd is poor quality, middle 3rd is OK quality, upper 3rd is high quality. Lower scores indicate that a brand
+            is less likely to be "real". For example, where google.com will score high, my-random-blog.com will score between
+            0.3-0.4. The score factors in things like data-recency, whether the brand has been claimed, if it has been manually
+            verified by our team, the brand''s domain ranking on the web, as well as other factors.
+
+
+            Don''t rely on a fixed score for any given brand. The way we calculate this score may change over time as we add
+            new factors, or tweak the weights of existing ones such that a score for a given brand may change. However, they
+            will remain aligned such that scores divide quality into thirds: low, medium, high.'
+          nullable: false
+        company:
+          type: object
+          properties:
+            employees:
+              type: integer
+              description: 1 employee, 2-10 employees, 11-50 employees, 51-200 employees, 201-500 employees, 501-1,000 employees,
+                1,001-5,000 employees, 5,001-10,000 employees, 10,001+ employees
+              enum:
+              - 1
+              - 2
+              - 11
+              - 51
+              - 201
+              - 501
+              - 1001
+              - 5001
+              - 10001
+              nullable: true
+            financialIdentifiers:
+              type: object
+              description: Object holding financial identifiers
+              properties:
+                isin:
+                  type: array
+                  description: List of ISIN codes
+                  items:
+                    type: string
+                ticker:
+                  type: array
+                  description: List of Stock or ETF ticker
+                  items:
+                    type: string
+              nullable: true
+            foundedYear:
+              type: integer
+              description: The year the brand was founded
+              nullable: true
+            industries:
+              type: array
+              items:
+                $ref: '#/components/schemas/Industry'
+              description: An array of industry categories, sorted by descending confidence. See the full list of industries
+                [here](https://docs.google.com/spreadsheets/d/1N44nMfVtPCFM4ebTcmRlqbyxjFtDAGVuqd0mh0dcOU0/edit?usp=sharing)
+            kind:
+              type: string
+              description: Organizational Structure
+              enum:
+              - EDUCATIONAL
+              - GOVERNMENT_AGENCY
+              - NON_PROFIT
+              - PARTNERSHIP
+              - PRIVATELY_HELD
+              - PUBLIC_COMPANY
+              - SELF_EMPLOYED
+              - SELF_OWNED
+              nullable: true
+            location:
+              $ref: '#/components/schemas/Location'
+          description: The company object returns firmographic data related to the brand
+          nullable: false
+        isNsfw:
+          type: boolean
+          description: true when the brand is for adult content, e.g. is not safe for work
+          nullable: false
+        urn:
+          type: string
+          description: Uniform Resource Name for the brand
+          nullable: false
+    BrandContextMeta:
+      type: object
+      description: Metadata about the resolved brand context.
+      required:
+      - domain
+      - canonical_name
+      - resolved_at
+      properties:
+        domain:
+          type: string
+          description: The resolved domain name.
+          example: brandfetch.com
+          nullable: false
+        canonical_name:
+          type: string
+          description: The canonical brand name.
+          example: Brandfetch
+          nullable: false
+        resolved_at:
+          type: string
+          format: date-time
+          description: Timestamp (ISO 8601) at which the context was resolved.
+          example: '2026-05-25T08:48:36.843440+00:00'
+          nullable: false
+    BrandContextIdentity:
+      type: object
+      description: Core identity of the brand.
+      properties:
+        tagline:
+          type: string
+          description: A short tagline summarizing the brand.
+          nullable: true
+        mission:
+          type: string
+          description: The brand's mission statement.
+          nullable: true
+        description:
+          type: string
+          description: A descriptive paragraph about the brand, its products, and how it differentiates.
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+          description: A list of tags that characterize the brand.
+          nullable: true
+    BrandContextTargetAudience:
+      type: object
+      description: A single target audience segment for the brand.
+      properties:
+        segment:
+          type: string
+          description: Short label describing the audience segment.
+          nullable: false
+        description:
+          type: string
+          description: What this segment needs from the brand and how the brand serves them.
+          nullable: false
+    BrandContextProductOrService:
+      type: object
+      description: A product or service offered by the brand.
+      properties:
+        name:
+          type: string
+          description: Name of the product or service.
+          nullable: false
+        type:
+          type: string
+          description: Whether the offering is a `product` or a `service`.
+          enum:
+          - product
+          - service
+          example: product
+          nullable: false
+        description:
+          type: string
+          description: Description of the product or service.
+          nullable: false
+    BrandContextPositioning:
+      type: object
+      description: How the brand positions itself in the market.
+      properties:
+        value_proposition:
+          type: string
+          description: The brand's value proposition.
+          nullable: true
+        target_audience:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrandContextTargetAudience'
+          description: Target audience segments for the brand.
+          nullable: true
+        products_and_services:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrandContextProductOrService'
+          description: Products and services offered by the brand.
+          nullable: true
+    BrandContextVoice:
+      type: object
+      description: The brand's voice — how it communicates.
+      properties:
+        summary:
+          type: string
+          description: A narrative summary of the brand's voice.
+          nullable: true
+        attributes:
+          type: array
+          items:
+            type: string
+          description: Short adjectives describing the voice (e.g., `confident`, `reassuring`).
+          nullable: true
+        avoid:
+          type: array
+          items:
+            type: string
+          description: Things the brand should avoid in its voice.
+          nullable: true
+    BrandContextStyle:
+      type: object
+      description: The brand's visual style.
+      properties:
+        summary:
+          type: string
+          description: A narrative summary of the brand's visual identity.
+          nullable: true
+        attributes:
+          type: array
+          items:
+            type: string
+          description: Short adjectives describing the visual style (e.g., `minimal`, `high-contrast`).
+          nullable: true
+    BrandContextBrand:
+      type: object
+      description: The brand's voice and visual style.
+      properties:
+        voice:
+          $ref: '#/components/schemas/BrandContextVoice'
+        style:
+          $ref: '#/components/schemas/BrandContextStyle'
+    BrandContextResponse:
+      type: object
+      description: 'Full brand context returned by the Brand Context API. Note: unlike other endpoints in this API which use
+        camelCase, the Brand Context endpoint intentionally returns field names in `snake_case` (e.g., `canonical_name`, `resolved_at`,
+        `value_proposition`, `target_audience`, `products_and_services`) to align with conventions commonly used by LLM tooling
+        that consumes this data.'
+      properties:
+        meta:
+          $ref: '#/components/schemas/BrandContextMeta'
+        identity:
+          $ref: '#/components/schemas/BrandContextIdentity'
+        positioning:
+          $ref: '#/components/schemas/BrandContextPositioning'
+        brand:
+          $ref: '#/components/schemas/BrandContextBrand'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

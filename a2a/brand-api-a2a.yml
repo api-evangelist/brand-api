@@ -1,0 +1,56 @@
+generated: '2026-08-14'
+method: probed
+source: https://docs.brandfetch.com/.well-known/agent-card.json
+discovery:
+  path: /.well-known/agent-card.json
+  canonical: true
+  host: docs.brandfetch.com
+  note: >-
+    Probed on all seven Brandfetch hosts. Only docs.brandfetch.com serves a card;
+    brandfetch.com, mcp.brandfetch.io, developers.brandfetch.com and
+    graphql.brandfetch.io all 404 both the canonical and the legacy
+    /.well-known/agent.json path, and api.brandfetch.io 403s every unrouted path.
+    cdn.brandfetch.io answers 200 with an HTML SPA shell and was rejected.
+conformance:
+  spec: A2A 1.0.0
+  grade: flavored
+  protocol_version: '0.3'
+  preferred_transport: HTTP+JSON
+  hard_checks:
+    capabilities_is_object: true
+    protocol_version_present: true
+    skills_is_array: true
+  deviations:
+    - supportedInterfaces-instead-of-additionalInterfaces
+    - missing-required-description
+    - protocolVersion-not-semver
+  deviation_notes: >-
+    The three structural hard checks pass — capabilities is an object, protocolVersion
+    is present, skills is an array — but the card uses `supportedInterfaces` where A2A
+    1.0.0 specifies `additionalInterfaces`, omits the REQUIRED top-level `description`,
+    and states protocolVersion as "0.3" rather than a full semantic version. It also
+    points `url` at the documentation site rather than an A2A endpoint, so the card is
+    a discovery/advertising manifest rather than a callable A2A agent: there is no JSONRPC
+    or gRPC interface behind it. The real callable agent surface is the MCP server at
+    https://mcp.brandfetch.io/mcp (see mcp/brand-api-mcp.yml).
+card:
+  name: Brandfetch
+  url: https://docs.brandfetch.com/
+  version: 1.0.0
+  documentation_url: https://docs.brandfetch.com/
+  provider_organization: Brandfetch
+  default_input_modes: [text/plain]
+  default_output_modes: [text/plain]
+  capabilities:
+    streaming: false
+    pushNotifications: false
+  skills: 1
+  skill_ids: [brandfetch]
+  skill_url: https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md
+  file: brand-api-agent-card.json
+x-evidence:
+  fetched: '2026-08-14'
+  url: https://docs.brandfetch.com/.well-known/agent-card.json
+  http_status: 200
+  content_type: application/json
+  body_bytes: 1040

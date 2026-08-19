@@ -1,0 +1,93 @@
+generated: '2026-08-14'
+method: searched
+source: https://docs.brandfetch.com/delivery-methods/webhooks/overview
+sources:
+  - https://docs.brandfetch.com/delivery-methods/webhooks/overview
+  - https://docs.brandfetch.com/delivery-methods/webhooks/event-types
+  - https://docs.brandfetch.com/delivery-methods/webhooks/delivery-behaviors
+  - https://docs.brandfetch.com/delivery-methods/webhooks/best-practices
+  - graphql/brand-api-brandfetch.graphql
+spec_type: Webhooks
+asyncapi_published: false
+asyncapi_probe:
+  - {url: 'https://docs.brandfetch.com/asyncapi.yaml', http_status: 404}
+  - {url: 'https://docs.brandfetch.com/asyncapi.json', http_status: 404}
+  - {url: 'https://api.brandfetch.io/asyncapi.json', http_status: 403,
+     note: 'API Gateway 403 on every unrouted path, not a signal either way'}
+  - {note: 'docs.brandfetch.com/llms.txt lists exactly one machine-readable spec under "## OpenAPI Specs": openapi.json. No AsyncAPI document is referenced anywhere.'}
+note: >-
+  Brandfetch documents a real event surface but publishes no AsyncAPI document, so this
+  artifact is the webhook catalog rather than a harvested spec. Nothing here was
+  invented — every event type, delivery behaviour and payload field is transcribed from
+  the provider's own webhook pages. The surface is Enterprise-gated: webhook endpoints
+  are registered and managed through the GraphQL account plane (Webhook, WebhookDelivery,
+  SubscribableEvent, CreateWebhookInput, UpdateWebhookInput), and there is no REST
+  management API for them.
+standard:
+  name: Standard Webhooks
+  version: 1.0.0
+  url: https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md
+  conforms: true
+  evidence: 'Provider states "The implementation follows the v1 of the Standard Webhooks specification."'
+availability:
+  tier: enterprise
+  registration: 'GraphQL — createWebhook / updateWebhook on https://graphql.brandfetch.io'
+  docs: https://docs.brandfetch.com/delivery-methods/webhooks/setup
+transport:
+  protocol: https
+  method: POST
+  content_type: application/json
+payload:
+  shape:
+    type: string
+    timestamp: 'ISO 8601 string, e.g. 2024-01-01T00:00:00.000000Z'
+    urn: 'urn:brandfetch:organization:<org>:webhook:<hook>:event:<event>'
+    data:
+      object: 'snapshot of the changed object (e.g. a Brand)'
+      delta: 'map of changed field -> {old, new}; always present on *.updated events'
+  typescript_interface: |
+    interface WebhookEventPayload {
+      readonly type: string;
+      readonly timestamp: string;
+      readonly urn: string;
+      readonly data: {
+        readonly object: Record<string, string>;
+        readonly delta: Record<string, { readonly old: any; readonly new: any }>;
+      };
+    }
+events:
+  - type: brand.claimed
+    namespace: brand
+    scope: 'urn:brandfetch:brand:<id>'
+    description: Triggered when a brand is claimed by the brand owner.
+  - type: brand.deleted
+    namespace: brand
+    scope: 'urn:brandfetch:brand:<id>'
+    description: >-
+      Triggered when a brand is soft-deleted. Exceedingly rare and usually related to a
+      take-down request by the brand's owner.
+  - type: brand.updated
+    namespace: brand
+    scope: 'urn:brandfetch:brand:<id>'
+    description: Triggered anytime a brand's data is updated.
+  - type: brand.company.updated
+    namespace: brand
+    scope: 'urn:brandfetch:brand:<id>'
+    description: Triggered anytime a brand's company data is updated.
+  - type: brand.verified
+    namespace: brand
+    scope: 'urn:brandfetch:brand:<id>'
+    description: Triggered when a brand's data is human-reviewed by the curation team.
+events_note: >-
+  Brandfetch states additional, undocumented event types exist and can be enabled on
+  request; the five above are the published subscribable set.
+delivery:
+  retry: 'Up to 3 days with exponential backoff.'
+  disable_behavior: >-
+    Endpoints that fail to return 2xx for multiple consecutive days trigger an email
+    warning and are then automatically disabled.
+  ordering: >-
+    NOT guaranteed. Re-indexing a brand can emit brand.company.updated and brand.updated
+    in either order; consumers must not depend on sequence and should re-fetch the
+    current object from the REST API when an out-of-order event arrives.
+  duplicate_delivery: 'Implied by at-least-once retry semantics; consumers should key on the event urn.'

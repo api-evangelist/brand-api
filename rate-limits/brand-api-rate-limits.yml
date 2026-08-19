@@ -4,7 +4,15 @@ schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main
 provider: Brand API (Brandfetch)
 providerId: brand-api
 created: '2026-05-04'
-modified: '2026-05-05'
+# Provenance stamped 2026-08-11: this artifact was written by the API Evangelist
+# bulk sweep dated 2026-05-04, not harvested from the provider. See roadmap#35.
+# UPGRADED 2026-08-14: every number below was re-read against the provider's live
+# rate-limit documentation and confirmed; the response headers, the Brand Search API
+# per-IP limit and the 429 message were added from the same pass. method: generated ->
+# searched.
+method: searched
+source: https://docs.brandfetch.com/logo-api/overview
+modified: '2026-08-14'
 reconciled: true
 tags:
   - Brands
@@ -15,10 +23,28 @@ description: Brandfetch enforces a soft 500,000 requests/month fair-use ceiling 
   hard 5-minute throughput windows scoped per IP and per customer. Overages on the throughput windows
   return HTTP 429. The Brand API has a separate hard cap of 2,500 calls/month tied to its subscription.
 sources:
-  - https://docs.brandfetch.com/logo-api/rate-limits
-  - https://brandfetch.com/developers/pricing
+  - https://docs.brandfetch.com/logo-api/overview
+  - https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md
+  - openapi/brand-api-brandfetch-openapi.yml
 responseCodes:
   throttled: 429
+  throttledMessage: API key quota exceeded
+responseHeaders:
+  - name: x-api-key-quota
+    meaning: Quota allotted to the API key.
+    source: https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md
+  - name: x-api-key-approximate-usage
+    meaning: Approximate usage consumed against that quota.
+    source: https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md
+  - name: Retry-After
+    meaning: Not documented and not observed. Do not depend on it.
+    present: false
+headerNote: >-
+  Brandfetch publishes no standard RateLimit-* (RFC 9239 draft) or X-RateLimit-* headers.
+  The two x-api-key-* headers above are the only runtime quota signal, and they are named
+  in Brandfetch's own published Agent Skill verification checklist rather than in the API
+  reference. An agent should read them on every response; there is no header that reports
+  the 5-minute throughput window.
 limits:
   - name: Logo API monthly fair-use
     scope: account
@@ -38,12 +64,35 @@ limits:
     limit: 2400
     timeFrame: minute
     notes: Hard 2,400 requests every 5 minutes per customer. 429 on overage.
+  - name: Brand Search API per-IP throughput
+    scope: ip
+    metric: requests_per_5_minutes
+    limit: 200
+    timeFrame: minute
+    notes: >-
+      200 requests every 5 minutes per IP on the Brand Search API. Brandfetch's published
+      Agent Skill tells implementers to debounce autocomplete inputs because of it.
+      Confirmed 2026-08-14 from
+      https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md
   - name: Brand API monthly cap
     scope: account
     metric: requests_per_month
     limit: 2500
     timeFrame: month
-    notes: Hard cap on $99/month Brand API subscription.
+    notes: >-
+      Hard cap on the $99/month Brand API subscription, per the 2026-05 pricing sweep.
+      NOT re-verified on 2026-08-14 — brandfetch.com/developers/pricing returns HTTP 403
+      to every non-browser client. The free developer plan's 100 requests/month IS
+      confirmed (https://docs.brandfetch.com/mcp/overview).
+  - name: Free developer plan monthly quota
+    scope: account
+    metric: requests_per_month
+    limit: 100
+    timeFrame: month
+    notes: >-
+      Confirmed 2026-08-14 from https://docs.brandfetch.com/mcp/overview — "sign up for
+      free; the free plan includes 100 requests per month." MCP calls draw on the same
+      quota as REST calls.
 policies:
   - name: Backoff Strategy
     description: Apply exponential backoff with jitter on 429 responses; respect any Retry-After header

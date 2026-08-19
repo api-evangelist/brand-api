@@ -1,0 +1,105 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Brand API (Brandfetch)
+  version: 1.0.0
+extends: openapi/brand-api-brandfetch-openapi.yml
+x-generated: '2026-08-14'
+x-method: generated
+x-source: >-
+  Derived from the harvested spec at https://docs.brandfetch.com/openapi.json plus the
+  Brandfetch documentation. This overlay records API Evangelist's enhancements only; the
+  harvested spec in openapi/ and openapi/_original/ is never mutated.
+actions:
+  - target: $.info
+    update:
+      x-apievangelist-provider: brand-api
+      x-apievangelist-harvested: '2026-08-14'
+      x-apievangelist-source: https://docs.brandfetch.com/openapi.json
+      x-apievangelist-artifacts:
+        authentication: authentication/brand-api-authentication.yml
+        conventions: conventions/brand-api-conventions.yml
+        errors: errors/brand-api-problem-types.yml
+        lifecycle: lifecycle/brand-api-lifecycle.yml
+        rate_limits: rate-limits/brand-api-rate-limits.yml
+        data_model: data-model/brand-api-data-model.yml
+        mcp: mcp/brand-api-mcp.yml
+        tool_crosswalk: mcp/brand-api-tool-crosswalk.yml
+        webhooks: asyncapi/brand-api-webhooks.yml
+
+  - target: $.info
+    description: >-
+      The spec declares info.version 1.0.0 while every path is under /v2. Record the URI
+      version explicitly so consumers do not confuse the two.
+    update:
+      x-api-version: v2
+      x-versioning-scheme: uri-path
+
+  - target: $.servers
+    description: Record the sibling hosts that are part of the product but absent from servers[].
+    update:
+      x-apievangelist-related-hosts:
+        - {host: 'https://cdn.brandfetch.io', surface: 'Logo API (CDN URL contract, no REST representation)'}
+        - {host: 'https://mcp.brandfetch.io/mcp', surface: 'MCP server (OAuth)'}
+        - {host: 'https://graphql.brandfetch.io', surface: 'GraphQL account plane (Enterprise)'}
+        - {host: 'https://developers.brandfetch.com', surface: 'Developer dashboard + OAuth authorization server'}
+
+  - target: $.components.securitySchemes
+    description: >-
+      The spec declares only bearerAuth. Record the Client ID credential used by the Logo
+      API and Brand Search API, which appears in the spec as a bare query parameter.
+    update:
+      x-apievangelist-clientId:
+        type: apiKey
+        in: query
+        name: c
+        description: >-
+          Public, embeddable Client ID used by the Logo API and Brand Search API. Not a
+          secret — it appears in the src of a public <img> tag and scopes fair-use rate
+          limiting rather than authorization.
+
+  - target: $.components.schemas.ErrorResponse
+    description: Record the real error envelope semantics — the spec's enum placeholder is not informative.
+    update:
+      x-error-format: proprietary
+      x-rfc9457: false
+      x-note: >-
+        Single `message` string, no machine-readable code. Message values are declared per
+        operation as single-value enums and are stable enough to match on. See
+        errors/brand-api-problem-types.yml.
+
+  - target: $.paths['/v2/brands/{identifier}'].get
+    description: >-
+      Mark the auto-detect route as legacy. Brandfetch's December 2025 changelog introduced
+      explicit type routes and recommends them; the docs label this one "Auto-detection
+      (legacy)" but the spec carries no deprecated flag.
+    update:
+      x-apievangelist-legacy: true
+      x-apievangelist-superseded-by:
+        - getBrandDataByDomain
+        - getBrandDataByTicker
+        - getBrandDataByIsin
+        - getBrandDataByCrypto
+      x-apievangelist-note: >-
+        Resolves identifiers in the order domain -> ticker -> ISIN -> crypto and can
+        mis-classify a ticker that looks like a domain.
+
+  - target: $.paths['/v2/brands/transaction'].post
+    description: Record the commercial gate and the idempotency posture of the only non-GET operation.
+    update:
+      x-apievangelist-tier: enterprise
+      x-apievangelist-idempotent: true
+      x-apievangelist-note: >-
+        POST is used for request-body ergonomics, not mutation — it creates no resource and
+        returns the same merchant for the same descriptor, so retrying is safe.
+
+  - target: $.paths['/v2/context/{domain}'].get
+    update:
+      x-apievangelist-content-negotiation: [application/json, text/markdown]
+      x-apievangelist-note: >-
+        cachedOnly=true returns 204 with an empty body when no context is cached; a client
+        that assumes a JSON body will break.
+
+  - target: $.paths['/v2/viewer'].get
+    update:
+      x-apievangelist-credential-introspection: true
+      x-apievangelist-note: 'Zero-cost credential validation — 200 valid, 401 missing/unknown, 403 revoked.'

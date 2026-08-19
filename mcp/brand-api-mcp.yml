@@ -1,0 +1,86 @@
+generated: '2026-08-14'
+method: searched
+status: published
+source: https://docs.brandfetch.com/mcp/overview
+sources:
+  - https://docs.brandfetch.com/mcp/overview
+  - https://github.com/Brandfetch/brandfetch-mcp-server
+  - https://mcp.brandfetch.io/.well-known/oauth-protected-resource
+deployment:
+  mode: remote
+  endpoint: https://mcp.brandfetch.io/mcp
+  auth: oauth
+  verified: probed
+  note: >-
+    Brandfetch runs a hosted, remote, streamable-HTTP MCP server that an agent POSTs to
+    directly — no install step. The official server SOURCE is published at
+    github.com/Brandfetch/brandfetch-mcp-server (FastMCP/Python, MIT) with a Dockerfile
+    for self-hosting, but it is NOT distributed through npm or PyPI, so there is no
+    `npx`/`pip` install line and this is not a local-stdio product. mode is therefore
+    `remote`, not `both`.
+  self_host:
+    repository: https://github.com/Brandfetch/brandfetch-mcp-server
+    method: docker
+    command: 'docker build -t brandfetch-mcp-server . && docker run --rm -p 8080:8080 brandfetch-mcp-server'
+    listens: http://localhost:8080/mcp
+server:
+  name: brandfetch
+  transport: http
+  url: https://mcp.brandfetch.io/mcp
+  version: v1.2.0
+  released: '2026-08-06'
+authentication:
+  scheme: oauth2
+  flow: authorization_code
+  pkce: S256
+  authorization_server: https://developers.brandfetch.com
+  authorization_endpoint: https://developers.brandfetch.com/oauth/authorize
+  token_endpoint: https://developers.brandfetch.com/api/oauth/token
+  registration_endpoint: https://developers.brandfetch.com/api/oauth/register
+  scopes: [read]
+  bearer_alternative: >-
+    Clients that cannot run an OAuth flow (CI, scripted agents) send a Brandfetch MCP
+    token as `Authorization: Bearer <token>`; tokens carry a `bf1.` prefix and are
+    minted in the Keys and MCP section of the developer dashboard.
+  discovery:
+    protected_resource: https://mcp.brandfetch.io/.well-known/oauth-protected-resource
+    authorization_server: https://developers.brandfetch.com/.well-known/oauth-authorization-server
+x-evidence:
+  fetched: '2026-08-14'
+  probe: 'POST https://mcp.brandfetch.io/mcp {"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+  http_status: 401
+  www_authenticate: 'Bearer realm="https://mcp.brandfetch.io", resource_metadata="https://mcp.brandfetch.io/.well-known/oauth-protected-resource"'
+  body: '{"error":"unauthorized","message":"Missing API credentials. Authenticate via OAuth when adding the Brandfetch connector."}'
+  interpretation: >-
+    The server exists and is live — it answered with a well-formed RFC 9728 OAuth
+    challenge rather than a 404. Live `tools/list` introspection is auth-gated, so the
+    tool list below is transcribed from the provider's own published tables (docs +
+    repo README), which agree exactly. Tool INPUT SCHEMAS are not published and require
+    authenticated introspection; the crosswalk in mcp/brand-api-tool-crosswalk.yml binds
+    each tool to the backing REST operation whose parameters are the real contract.
+quotas:
+  note: MCP requests count against the caller's Brand API quota; usage is visible in the developer dashboard.
+tools:
+  - name: brand_search
+    description: Search for brands by name. Useful when the domain is unknown or ambiguous.
+    source_operation: openapi/brand-api-brandfetch-openapi.yml#searchBrands
+  - name: get_brand
+    description: Retrieve full brand data (logos, colors, fonts, company info) by domain, ticker, ISIN, or crypto symbol.
+    source_operation: openapi/brand-api-brandfetch-openapi.yml#getBrandData
+  - name: get_brand_context
+    description: 'Get LLM-ready brand context for a domain: voice, audience, positioning, and style.'
+    source_operation: openapi/brand-api-brandfetch-openapi.yml#getBrandContext
+  - name: enrich_transaction
+    description: Identify a merchant brand from a raw credit card or bank statement string.
+    source_operation: openapi/brand-api-brandfetch-openapi.yml#getBrandFromTransaction
+  - name: build_logo_urls
+    description: Construct Brandfetch CDN logo URLs for one or more brands without making an API call.
+    source_operation: null
+  - name: get_asset_base64
+    description: >-
+      Fetch a CDN asset (logo, icon, symbol, image) as checksummed base64 — a last resort
+      for sandboxed environments that cannot reach the CDN.
+    source_operation: null
+  - name: send_feedback
+    description: Send feedback about the MCP server (bugs, data quality, feature requests) to the Brandfetch team.
+    source_operation: null

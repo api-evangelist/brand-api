@@ -1,0 +1,1546 @@
+# Brandfetch GraphQL schema
+# Harvested 2026-08-14 by anonymous introspection of https://graphql.brandfetch.io (HTTP 200).
+# Rendered from the introspection result; no fields added or removed.
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+enum ApiClientKind {
+  AUTOCOMPLETE
+  ENTERPRISE
+  NATIVE
+  LOGO_CDN
+}
+
+enum BillingSegment {
+  FREE
+  BRANDSPACE
+  DEVELOPER
+}
+
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PAYMENT_FAILED
+}
+
+enum PlanFrequency {
+  MONTHLY
+  YEARLY
+}
+
+enum PlanTier {
+  FREE
+  GROWTH
+  PLUS
+  PRO
+  MAX
+  ENTERPRISE
+}
+
+enum RadarHitAction {
+  """The 'take down' action is to request the 3rd party site to switch to using the Brandfetch Logo CDN."""
+  USE_LOGO_CDN
+  """The 'take down' action is to demand the 3rd party to remove the asset."""
+  REMOVE
+}
+
+enum RadarHitStatus {
+  """No 'take down' action has been taken on the Hit"""
+  UNACTIONED
+  """A 'take down' action has been opened and is in progress"""
+  OPEN
+  """A 'take down' action has resolved successfully"""
+  RESOLVED
+}
+
+enum RadarStatus {
+  """The Radar was just created and the system hasn't begun processing it yet."""
+  PENDING
+  """The search for similar images is in progress."""
+  SEARCH_IN_PROGRESS
+  """We've finished searching for and analyzing images."""
+  SEARCH_COMPLETED
+  """For some reason, there was a problem during search & analysis."""
+  SEARCH_FAILED
+  """There is an open/ongoing 'take down' action in progress for one or more of the Radar's Hits."""
+  ACTION_IN_PROGRESS
+}
+
+"""
+A class of HTTP response status, for filtering a request log. A class covers a
+whole range rather than an exact code, so `CLIENT_ERROR` matches any 4xx.
+"""
+enum RequestLogStatus {
+  """2xx — the request succeeded."""
+  SUCCESS
+  """3xx — the request was redirected."""
+  REDIRECT
+  """4xx — the request was rejected; the caller's to fix."""
+  CLIENT_ERROR
+  """5xx — the request failed on our side."""
+  SERVER_ERROR
+}
+
+enum SearchResultOrderField {
+  CREATED_AT
+  UPDATED_AT
+  LAST_VIEWED
+  NAME
+}
+
+enum TrackerHitAction {
+  """No action has been taken"""
+  NONE
+  """The 'take down' action is to request the 3rd party site to switch to using the Brandfetch Logo CDN."""
+  USE_LOGO_CDN
+  """The 'take down' action is to demand the 3rd party to remove the asset."""
+  REMOVE
+  """Dismiss the hit and take no action"""
+  DISMISS
+}
+
+enum TrackerHitStatus {
+  """No 'take down' action has been taken on the Hit"""
+  UNACTIONED
+  """The user decided to not take any action on the Hit"""
+  DISMISSED
+  """A 'take down' action has been opened and is in progress"""
+  OPEN
+  """A 'take down' action has resolved successfully"""
+  RESOLVED
+  """A 'take down' action failed"""
+  FAILED
+  """A 'take down' action was cancelled"""
+  CANCELLED
+}
+
+enum TrackerKind {
+  IMAGE
+  TEXT
+}
+
+enum TrackerStatus {
+  """The Tracker was just created and the system hasn't begun processing it yet."""
+  QUEUED
+  """The search for similar images is in progress."""
+  SEARCH_IN_PROGRESS
+  """We've finished searching for and analyzing images."""
+  SEARCH_COMPLETED
+  """For some reason, there was a problem during search & analysis."""
+  SEARCH_FAILED
+  """There is an open/ongoing 'take down' action in progress for one or more of the Tracker's Hits."""
+  ACTION_IN_PROGRESS
+  """All 'take down' actions have been resolved and no new search has been run."""
+  SETTLED
+}
+
+"""Where the user first heard about Brandfetch."""
+enum UserDiscoverySource {
+  """A search engine, such as Google or Bing."""
+  SEARCH_ENGINE
+  """An AI assistant, such as Claude or ChatGPT."""
+  AI
+  """A recommendation from someone else."""
+  WORD_OF_MOUTH
+  """A social platform, such as X, LinkedIn or Product Hunt."""
+  SOCIAL
+  """An integration or automation platform, such as MCP, n8n or Zapier."""
+  INTEGRATION
+  """A design tool, such as Figma or Canva."""
+  DESIGN_TOOL
+  """Somewhere other than the sources listed here."""
+  OTHER
+}
+
+"""A step of the developer onboarding that can be recorded as completed."""
+enum UserOnboardedFeature {
+  """The developer quickstart tour."""
+  DEV_QUICKSTART
+  """The developer onboarding survey."""
+  DEV_ONBOARDING
+}
+
+"""How the user described their own technical background."""
+enum UserPersona {
+  """The user identified themself as a developer."""
+  DEVELOPER
+  """The user identified themself as something other than a developer."""
+  OTHER
+}
+
+"""The primary use case the user selected for their account."""
+enum UserUseCase {
+  """Embedding brand assets in a product, such as auto-filling logos, colors and fonts."""
+  PRODUCT
+  """Enriching financial transactions with logos and brand data."""
+  FINANCE
+  """Supplying live brand data to AI agents over the API or MCP server."""
+  AI
+  """Personalizing sales outreach with prospects' brand assets."""
+  SALES
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+input ApiClientInput {
+  name: StringWithMaxLengthOf100!
+  description: StringWithMaxLengthOf1000
+}
+
+input ApiKeyInput {
+  name: StringWithMaxLengthOf100!
+  description: StringWithMaxLengthOf1000
+}
+
+"""Time window and credential filter for the API request log."""
+input ApiRequestLogFilter {
+  """Inclusive lower bound. Defaults to 24 hours before `to`."""
+  from: DateTime
+  """Inclusive upper bound. Defaults to now."""
+  to: DateTime
+  """
+  Restrict the log to a single API key of the organization. Omit for every key
+the organization owns.
+  """
+  apiKey: URN
+  """
+  Restrict the log to responses in one status class. Only REST requests carry a
+response status, so filtering by one also excludes every GraphQL request.
+  """
+  status: RequestLogStatus
+}
+
+input CityFilter {
+  eq: StringWithMaxLengthOf100
+  in: [StringWithMaxLengthOf100!]
+}
+
+input CountryCodeFilter {
+  eq: CountryCode
+  in: [CountryCode!]
+}
+
+input CreateCheckoutLinkInput {
+  price: ID!
+}
+
+input CreateOrganizationInput {
+  name: StringWithMaxLengthOf100!
+  notificationEmails: [EmailAddress!]
+}
+
+input CreateWebhookInput {
+  events: [EventName!]!
+  """URL of HTTPS endpoint the webhook should deliver events to"""
+  url: URL!
+  """HTTP headers to include in the webhook delivery request to the endpoint URL"""
+  urlHeaders: [HttpHeaderInput!] = []
+  enabled: Boolean = true
+  description: String
+}
+
+input HttpHeaderInput {
+  name: String!
+  value: String
+}
+
+input IdFilter {
+  eq: ID
+  in: [ID!]
+}
+
+"""Time window and credential filter for the Logo CDN request log."""
+input LogoCdnRequestLogFilter {
+  """Inclusive lower bound. Defaults to 24 hours before `to`."""
+  from: DateTime
+  """Inclusive upper bound. Defaults to now."""
+  to: DateTime
+  """
+  Restrict the log to a single API client of the organization. Omit for every
+client the organization owns.
+  """
+  apiClient: URN
+  """
+  Restrict the log to responses in one status class. A request that ended before
+a response was sent carries no status and so matches no class.
+  """
+  status: RequestLogStatus
+}
+
+input NumberFilter {
+  eq: Float
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+  in: [Float!]
+}
+
+input RecordOrganizationAttributionInput {
+  """Google Analytics client id, from the browser's `_ga` cookie with its `GA1.1.` prefix stripped."""
+  gClientId: NonEmptyString!
+  """Google Analytics session id — the third dot-delimited segment of the `_ga_<container>` cookie."""
+  gSessionId: NonEmptyString!
+}
+
+input SearchFilter {
+  """Filter by domain"""
+  domain: StringFilter
+  """Text query string to search for"""
+  query: StringFilter
+  """Text brand name string to search for"""
+  name: StringFilter
+  """Filter be geographic region"""
+  region: StringFilter
+  """Filter by ISO 3166-1 alpha-2 country code"""
+  country: CountryCodeFilter
+  """Filter by administrative division (like a state or province)"""
+  administrativeDivision: StringFilter
+  """Filter by city"""
+  city: CityFilter
+  """Filter by industry"""
+  industry: IdFilter
+  """Filter by number of company employees"""
+  companyEmployees: NumberFilter
+  """Filter by kind of company"""
+  companyKind: StringFilter
+  """Filter for featured brands"""
+  featured: Boolean
+  """Filter for verified brands"""
+  verified: Boolean
+  """Filter for claimed brands"""
+  claimed: Boolean
+  """Filter for NSFW brands"""
+  isNsfw: Boolean
+  """Filter for brands by quality score"""
+  qualityScore: NumberFilter
+}
+
+input SearchResultOrder {
+  direction: OrderDirection!
+  field: SearchResultOrderField!
+}
+
+input SendInvitationInput {
+  email: EmailAddress!
+}
+
+input StringFilter {
+  eq: StringWithMaxLengthOf1000
+  in: [StringWithMaxLengthOf1000!]
+}
+
+input UpdateBillingPreferencesInput {
+  contactEmail: EmailAddress
+  hardOverageDollarLimit: NonNegativeInt
+  softOverageDollarLimit: NonNegativeInt
+}
+
+input UpdateOrganizationInput {
+  name: StringWithMaxLengthOf100
+  notificationEmails: [EmailAddress!]
+}
+
+"""
+Profile changes for the authenticated user. A field that is omitted or `null`
+leaves the current value unchanged.
+"""
+input UpdateProfileInput {
+  """The user's display name. Must not be blank when provided."""
+  name: StringWithMaxLengthOf100
+  """How the user describes their own technical background."""
+  persona: UserPersona
+  """The primary use case the user selected for their account."""
+  useCase: UserUseCase
+  """Where the user first heard about Brandfetch."""
+  discoverySource: UserDiscoverySource
+  """Records the given onboarding step as completed. Steps accumulate across calls and are never removed; recording the same step twice has no further effect."""
+  onboardedFeature: UserOnboardedFeature
+}
+
+input UpdateWebhookInput {
+  events: [EventName!]
+  urns: [URN!]
+  """URL of HTTPS endpoint the webhook should deliver events to"""
+  url: URL
+  """HTTP headers to include in the webhook delivery request to the endpoint URL"""
+  urlHeaders: [HttpHeaderInput!]
+  enabled: Boolean
+  description: String
+}
+
+"""
+Narrows a webhook's delivery history to a time window.
+Both bounds apply to `WebhookDelivery.createdAt`, the time the delivery was
+recorded and the order the history is returned in. They do not apply to
+`deliveredAt`, which is null while a delivery is pending and can be later than
+`createdAt` when a delivery was retried.
+"""
+input WebhookDeliveryFilter {
+  """Inclusive lower bound. Omit to start at the oldest delivery still retained."""
+  from: DateTime
+  """Inclusive upper bound. Omit to end at the newest delivery."""
+  to: DateTime
+}
+
+input WebhooksFilter {
+  """Filter by enabled status"""
+  enabled: Boolean
+  """Filter by delivery status"""
+  deliveryStatus: WebhookDeliveryStatus
+}
+
+interface MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+"""An object with an ID to support global identification."""
+interface Node {
+  """The object's id"""
+  id: ID!
+  """The Object's URN"""
+  urn: URN!
+  """Datetime when the object was created"""
+  createdAt: DateTime!
+  """Datetime when the object was last modified"""
+  updatedAt: DateTime
+}
+
+interface TaxonomyNode {
+  id: ID!
+  urn: URN!
+  name: String!
+  depth: Int!
+  children: [TaxonomyNode!]!
+}
+
+type ApiClient implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime
+  lastUsedAt: DateTime
+  name: StringWithMaxLengthOf100!
+  description: StringWithMaxLengthOf1000
+  kind: ApiClientKind!
+  publicKey: String!
+  quota: Int!
+  usage: QuotaUsage!
+}
+
+"""An ApiClient edge"""
+type ApiClientEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The ApiClient at the end of edge."""
+  node: ApiClient!
+}
+
+type ApiClientMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+  apiClient: ApiClient
+}
+
+"""A ApiClients connection"""
+type ApiClientsConnection {
+  """A list of node edges"""
+  edges: [ApiClientEdge!]!
+  """A list of nodes"""
+  nodes: [ApiClient!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+  usage: QuotaUsage!
+}
+
+"""
+An organization's spendable allowance for one quota.
+Spent in a fixed order: the recurring allowance first, then any overage allowance, then
+one-time credits — so credits are drawn on last and carry over until they are used.
+"""
+type ApiCredits {
+  """
+  Requests still available in this period: what is left of the recurring allowance and
+the overage allowance, plus `prepaidBalance`. -1 when the allowance is unlimited.
+  """
+  available: Int!
+  """
+  One-time credits still held. Unlike the recurring allowance these do not expire at the
+end of a period and are not replenished automatically. 0 for quotas that do not use
+one-time credits.
+  """
+  prepaidBalance: NonNegativeInt!
+  """
+  Requests permitted beyond the recurring allowance, funded by the organization's overage
+limit. 0 when no overage limit is set, and for quotas that are not billed for overage.
+This is what the limit pays for, which is not always spendable: an overage allowance is
+only counted towards `available` while payment on the subscription is up to date.
+  """
+  overageAllowance: NonNegativeInt!
+  """Whether requests in this period are currently being billed at the overage rate."""
+  isOveraging: Boolean!
+  """Requests billed at the overage rate so far in this period, up to `overageAllowance`."""
+  overageRequests: NonNegativeInt!
+  """
+  `overageRequests` priced at the overage rate, in the same currency as
+`Organization.hardOverageDollarLimit`.
+  """
+  overageAmount: Float!
+  """
+  When the recurring allowance next resets. Null when the quota has no recurring
+allowance to reset, as for an organization funded entirely by one-time credits.
+  """
+  renewsAt: DateTime
+}
+
+type ApiKey implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime
+  lastUsedAt: DateTime
+  name: StringWithMaxLengthOf100!
+  description: StringWithMaxLengthOf1000
+  secret: String!
+  quota: Int!
+  usage: QuotaUsage!
+}
+
+"""An ApiKey edge"""
+type ApiKeyEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The ApiKey at the end of edge."""
+  node: ApiKey!
+}
+
+type ApiKeyMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+  apiKey: ApiKey
+}
+
+"""A ApiKeys connection"""
+type ApiKeysConnection {
+  """A list of node edges"""
+  edges: [ApiKeyEdge!]!
+  """A list of nodes"""
+  nodes: [ApiKey!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+  usage: QuotaUsage!
+}
+
+"""
+One fulfilled API request, normalized across the REST and GraphQL APIs. Fields
+that do not apply to the API that served a given request are `null` rather than
+omitted, so every entry has the same shape.
+"""
+type ApiRequestLog {
+  id: ID!
+  """
+  When the request was recorded, which trails the request itself by a few seconds
+and occasionally longer. Treat it as approximate.
+  """
+  timestamp: DateTime!
+  """The API key the request authenticated as."""
+  apiKey: URN
+  """
+  Name of that API key at the time of reading. Included because the log covers
+revoked keys too, and those are absent from `Organization.apiKeys` — so
+requests made with a rotated key stay attributed.
+  """
+  apiKeyName: String
+  """The service that served the request — `rest-api` or `graphql-api`."""
+  service: String!
+  """HTTP method. Null for GraphQL requests."""
+  method: String
+  """Request path. Null for GraphQL requests."""
+  path: String
+  """Root GraphQL field. Null for REST requests."""
+  fieldName: String
+  """HTTP status. Null for GraphQL requests, which do not publish one."""
+  statusCode: Int
+  userAgent: String
+  ip: String
+}
+
+"""An ApiRequestLog edge"""
+type ApiRequestLogEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The ApiRequestLog at the end of edge."""
+  node: ApiRequestLog!
+}
+
+"""
+An ApiRequestLogs connection.
+This connection has no `totalCount`. Page through it to read the log, and use
+the usage figures on `ApiKey.usage` for request totals.
+"""
+type ApiRequestLogsConnection {
+  """A list of node edges"""
+  edges: [ApiRequestLogEdge!]!
+  """A list of nodes"""
+  nodes: [ApiRequestLog!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+}
+
+type AssetCollection implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String!
+}
+
+type AssetFolder implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String!
+}
+
+type BillingPlan {
+  id: ID!
+  credits: NonNegativeInt!
+  currency: String!
+  currencySymbol: String!
+  name: String!
+  price: NonNegativeInt!
+  frequency: PlanFrequency!
+  tier: PlanTier!
+  segment: BillingSegment!
+}
+
+type BillingSubscription {
+  id: ID!
+  credits: NonNegativeInt!
+  currency: String!
+  currencySymbol: String!
+  status: PaymentStatus
+  tier: PlanTier!
+  frequency: PlanFrequency
+  nextInvoiceAt: DateTime
+  cancelAt: DateTime
+  price: NonNegativeInt!
+  name: String!
+  segment: BillingSegment!
+}
+
+type Brand implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  claimed: Boolean!
+  verified: Boolean!
+  name: String!
+  domain: FQDN!
+  domainAliases: [FQDN!]!
+  description: String
+  longDescription: String
+  company: Company!
+  logo: URL
+  icon: URL
+  qualityScore: Float!
+}
+
+type BrandAsset implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type BrandImageAsset implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String
+  image: URL!
+  folder: AssetFolder!
+  collection: AssetCollection!
+}
+
+type BrandPoliceMutation {
+  """Create a new Tracker and start the search/comparison"""
+  createTracker(kind: TrackerKind!, brand: ID!, asset: ID, query: StringWithMaxLengthOf100): CreateTrackerMutationResult!
+  """Take action on a Tracker Hit"""
+  takeAction(hit: ID!, action: TrackerHitAction!, withAsset: ID): TakeActionMutationResult!
+  """Delete a Tracker"""
+  deleteTracker(id: ID!): DeleteTrackerMutationResult!
+}
+
+type BrandPoliceQuery {
+  """Get a tracker by ID"""
+  tracker(id: ID!): Tracker
+  """Get all trackers the user has access to"""
+  trackers(brand: ID!): TrackersConnection!
+}
+
+type City {
+  name: String!
+}
+
+type Company {
+  name: String!
+  city: City
+  country: Country
+  administrativeDivision: GeographicAdministrativeDivision
+  industry: Industry
+  industries: [Industry]!
+}
+
+type Country {
+  """ISO 3166-1 alpha-2 code"""
+  code: ID!
+  name: String!
+  slug: String!
+  """The country's flag emoji"""
+  emoji: String!
+  region: GeographicRegion!
+  subRegion: GeographicRegion!
+  latitude: Float!
+  longitude: Float!
+  """The country's administrative divisions. For example, states, provinces, prefectures, etc."""
+  administrativeDivisions: [GeographicAdministrativeDivision!]!
+}
+
+type CreateTrackerMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+  tracker: Tracker
+}
+
+type DeleteTrackerMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type GenericMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type GeographicAdministrativeDivision {
+  name: String!
+  slug: String!
+  country: Country!
+  latitude: Float!
+  longitude: Float!
+}
+
+type GeographicRegion {
+  banner: URL
+  name: String!
+  slug: String!
+  emoji: String!
+  countries: [Country!]!
+  depth: Int!
+  parent: GeographicRegion
+  subRegions: [GeographicRegion!]!
+}
+
+"""HTTP Header"""
+type HttpHeader {
+  name: String!
+  value: String
+}
+
+type Industry implements TaxonomyNode {
+  id: ID!
+  urn: URN!
+  banner: URL
+  name: String!
+  slug: String!
+  emoji: String!
+  depth: Int!
+  """List of nested sub-industries"""
+  children: [Industry!]!
+  """Maybe a parent industry if the current node is a child industry"""
+  parent: Industry
+}
+
+type Invitation implements Node {
+  id: ID!
+  urn: URN!
+  """Datetime when the item was created"""
+  createdAt: DateTime!
+  """Datetime when the object was last updated"""
+  updatedAt: DateTime!
+  """The Actor who created the document."""
+  createdBy: Actor
+  email: EmailAddress!
+  organization: Organization!
+}
+
+type InvitationMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+  invitation: Invitation
+}
+
+"""
+One Logo CDN request. Every field but `id` is nullable — a log line carries only
+what the request itself provided — and the brand and geo details are best-effort,
+derived from the requested path and the client IP.
+"""
+type LogoCdnRequestLog {
+  id: ID!
+  """
+  When the request was served. Nullable, unlike `ApiRequestLog.timestamp`: a log
+line that does not carry a usable time is reported as `null` rather than given
+an invented one.
+  """
+  timestamp: DateTime
+  """The API client whose client id signed the request."""
+  apiClient: URN
+  """
+  Name of that API client at the time of reading. Included because the log covers
+revoked clients too, and those are absent from `Organization.apiClients`.
+  """
+  apiClientName: String
+  """The requested CDN path."""
+  path: String
+  """Brand domain (or asset id) the request resolved to."""
+  domain: String
+  """Asset kind — `logo`, `icon`, `symbol`, …"""
+  assetType: String
+  """Delivered image format — `webp`, `png`, `svg`, …"""
+  format: String
+  statusCode: Int
+  """Response size in bytes."""
+  bytes: Int
+  """Edge cache outcome — `Hit`, `Miss`, `RefreshHit`, `Error`, …"""
+  cacheResult: String
+  """Domain of the referring page, when the request sent a `Referer`."""
+  referer: String
+  userAgent: String
+  ip: String
+  """
+  Two-letter country the request came from, resolved from the client IP. A
+`String` rather than the `CountryCode` scalar, because an unrecognized value is
+reported as-is instead of failing the page.
+  """
+  countryCode: String
+}
+
+"""A LogoCdnRequestLog edge"""
+type LogoCdnRequestLogEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The LogoCdnRequestLog at the end of edge."""
+  node: LogoCdnRequestLog!
+}
+
+"""A LogoCdnRequestLogs connection"""
+type LogoCdnRequestLogsConnection {
+  """A list of node edges"""
+  edges: [LogoCdnRequestLogEdge!]!
+  """A list of nodes"""
+  nodes: [LogoCdnRequestLog!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """
+  Total requests matching the query across the whole window, not just the ones
+on this page. Exact.
+  """
+  totalCount: Int!
+}
+
+"""Root mutation fields"""
+type Mutation {
+  """Brand Police"""
+  brandPolice: BrandPoliceMutation!
+  """Request an asynchronous data fetching & processing of the given brand. If provided, once the process is complete, the callback URL will be called with the brand data."""
+  requestBrand(domain: FQDN!, callback: URL): RequestBrandMutationResult!
+  """Request an asynchronous refresh (re-indexing) of the given brand. If provided, once the refresh is complete, the callback URL will be called with the updated brand data. A brand that was crawled within the past 24 hours cannot be refreshed again yet: the request is rejected with `success: false` and the code `recentlyCrawled`."""
+  requestRefresh(brand: URN!, callback: URL): RequestRefreshMutationResult!
+  """Creates and activates a new webhook"""
+  createWebhook(input: CreateWebhookInput!): WebhookMutationResult!
+  """Update the configuration of an existing webhook"""
+  updateWebhook(webhook: URN!, input: UpdateWebhookInput!): WebhookMutationResult!
+  """Deactivates and removes a webhook"""
+  deleteWebhook(webhook: URN!): WebhookMutationResult!
+  """
+  Subscribe a webhook to the given URN.
+This adds the URN to the scope list of URNs that the webhook will be notified about.
+For example, passing the URN of a brand will cause the webhook to be notified of all changes to that brand.
+  """
+  addWebhookSubscriptions(webhook: URN!, subscriptions: [URN!]!): WebhookMutationResult!
+  """
+  Unsubscribe a webhook from the given URN.
+This removes the URN from the scope list of URNs that the webhook will be notified about.
+  """
+  removeWebhookSubscriptions(webhook: URN!, subscriptions: [URN!]!): WebhookMutationResult!
+  createCheckoutLink(organization: URN!, input: CreateCheckoutLinkInput!): URL!
+  createBillingPortalLink(organization: URN!): URL!
+  updateBillingPreferences(organization: URN!, input: UpdateBillingPreferencesInput!): OrganizationMutationResult!
+  """
+  Updates the authenticated user's own profile. A field that is omitted or `null` keeps its
+current value; at least one field must be provided. Requires a user session — an API key
+cannot act on a profile.
+  """
+  updateProfile(input: UpdateProfileInput!): UserMutationResult!
+  """
+  Permanently deletes the authenticated user's own account. This removes their sign-in
+credentials, removes them from every organization they share with other members, and requests
+deletion of any organization where they were the only member — which is processed
+asynchronously and cascades to all associated data (billing records, API keys, clients,
+webhooks, and so on).
+If the user is the only member of an organization that cannot be deleted (it has termination
+protection or is on a custom/enterprise plan), the request is rejected and nothing is changed.
+  """
+  deleteAccount: UserMutationResult!
+  removeUserFromOrganization(organization: URN!, user: URN!): OrganizationMutationResult!
+  sendInvitation(organization: URN!, input: SendInvitationInput!): InvitationMutationResult!
+  acceptInvitation(invitation: URN!): InvitationMutationResult!
+  deleteInvitation(invitation: URN!): InvitationMutationResult!
+  createOrganization(input: CreateOrganizationInput!): OrganizationMutationResult!
+  updateOrganization(organization: URN!, input: UpdateOrganizationInput!): OrganizationMutationResult!
+  """
+  Records the Google Analytics ids of the visit this organization grew out of.
+First touch wins: once recorded the pair is never overwritten, so the dashboard can
+send this on every sign-in. The ids are read back when a checkout link is created,
+which is what attributes a purchase to the campaign that brought the organization
+in — even when the member who buys is not the member who signed up.
+  """
+  recordOrganizationAttribution(organization: URN!, input: RecordOrganizationAttributionInput!): OrganizationMutationResult!
+  """Requests deletion of the organization. Deletion is processed asynchronously and, once complete, permanently removes the organization and all of its associated data (API keys, clients, members, invitations, billing, webhooks, etc.)."""
+  deleteOrganization(organization: URN!): OrganizationMutationResult!
+  createApiKey(organization: URN!, input: ApiKeyInput!): ApiKeyMutationResult!
+  updateApiKey(apiKey: URN!, input: ApiKeyInput!): ApiKeyMutationResult!
+  deleteApiKey(apiKey: URN!): ApiKeyMutationResult!
+  createApiClient(organization: URN!, input: ApiClientInput!): ApiClientMutationResult!
+  updateApiClient(apiClient: URN!, input: ApiClientInput!): ApiClientMutationResult!
+  deleteApiClient(apiClient: URN!): ApiClientMutationResult!
+}
+
+type Organization implements Node {
+  id: ID!
+  urn: URN!
+  """Datetime when the item was created"""
+  createdAt: DateTime!
+  """Datetime when the item was last updated"""
+  updatedAt: DateTime!
+  """The Actor who created the organization. Null when that account no longer exists."""
+  createdBy: Actor
+  """
+  Two-letter ISO 3166-1 code of the country the organization is billed in. Always null at
+present: no billing country is recorded against an organization.
+  """
+  billingCountryCode: String
+  name: String!
+  avatar: URL!
+  notificationEmails: [EmailAddress!]!
+  hardOverageDollarLimit: NonNegativeInt!
+  softOverageDollarLimit: NonNegativeInt!
+  activeBillingSubscriptions: [BillingSubscription!]!
+  """All pending invitations to join this organization"""
+  invitations: [Invitation!]!
+  """Get a list of all users in this organization."""
+  users(first: IntegerBetween1And100 = 10, after: ID): UsersConnection!
+  """Get a list of all API Keys for this organization."""
+  apiKeys(first: IntegerBetween1And100 = 10, after: ID): ApiKeysConnection!
+  """Get a list of all Clients for this organization."""
+  apiClients(first: IntegerBetween1And100 = 10, after: ID): ApiClientsConnection!
+}
+
+type OrganizationMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+  organization: Organization
+}
+
+"""Pagination information"""
+type PageInfo {
+  """An end cursor for use in pagination."""
+  endCursor: ID
+  """Indicates if there are more pages to fetch."""
+  hasNextPage: Boolean!
+  """Indicates if there are any pages prior to the current page."""
+  hasPreviousPage: Boolean!
+  """An start cursor for use in pagination."""
+  startCursor: ID
+  """The total number of pages."""
+  totalPages: Int
+  """The current page."""
+  currentPage: Int
+}
+
+"""Root query fields"""
+type Query {
+  """Get a brand by its ID or domain name"""
+  brand(brand: URN, domain: FQDN): Brand
+  """Search for brands using one or more filters"""
+  search(filter: SearchFilter, first: IntegerBetween1And100 = 10, after: ID, sort: SearchResultOrder): SearchResultsConnection!
+  """Get Brandfetch's taxonomy"""
+  taxonomy: Taxonomy!
+  """Returns a list of events available for webhooks"""
+  subscribableEvents: [SubscribableEvent!]!
+  """Get a webhook by ID"""
+  webhook(webhook: URN!): Webhook
+  """Get a list of all webhooks matching a filter."""
+  webhooks(first: Int = 10, after: ID): WebhooksConnection!
+  """
+  Requests made with the organization's API keys, newest first.
+
+Covers the REST and GraphQL APIs. Logo CDN traffic is authenticated by an API
+client rather than an API key and is not in here — see `logoCdnRequestLogs`.
+The window may span at most 31 days.
+  """
+  apiRequestLogs(organization: URN!, filter: ApiRequestLogFilter, first: IntegerBetween1And100 = 25, after: ID): ApiRequestLogsConnection!
+  """
+  Logo CDN requests served for the organization's API clients, newest first.
+
+Only requests signed with one of the organization's API client keys are
+included, which is also what Logo CDN usage is billed on. The window may span
+at most 31 days, and paging stops after 10 000 rows — narrow the window to see
+further back.
+  """
+  logoCdnRequestLogs(organization: URN!, filter: LogoCdnRequestLogFilter, first: IntegerBetween1And100 = 25, after: ID): LogoCdnRequestLogsConnection!
+  """API version"""
+  version: String!
+  """Get information about the current viewer session"""
+  viewer: Viewer!
+  """Brand Police"""
+  brandPolice: BrandPoliceQuery!
+}
+
+"""
+Consumption of one quota, and what is left to spend against it.
+`currentPeriod.quota` is the recurring allowance alone. It is not what an organization
+may spend: one-time credits and any overage allowance count towards that too, and a
+plan can carry no recurring allowance at all. Read `credits` for what is spendable.
+"""
+type QuotaUsage {
+  currentPeriod: QuotaUsageHistory!
+  history: [QuotaUsageHistory!]!
+  """
+  What the organization can still spend against this quota, and whether it is currently
+being billed for overage.
+Reported for the organization even on an individual API key or client, because
+allowances are held at the organization level and shared by its keys. A key's own
+`currentPeriod.used` counts only that key's requests.
+  """
+  credits: ApiCredits!
+}
+
+type QuotaUsageHistory {
+  periodStart: DateTime!
+  periodEnd: DateTime!
+  """The recurring allowance for the period. -1 means unlimited."""
+  quota: Int!
+  used: Int!
+}
+
+type Quotas {
+  trackers: NonNegativeInt!
+  takeDownRequests: NonNegativeInt!
+  libraries: NonNegativeInt!
+}
+
+type Radar {
+  id: ID!
+  status: RadarStatus
+  """The input image asset we compared against"""
+  asset: BrandAsset!
+  """Matches of image web URLs which match to the input search asset"""
+  hits: RadarHitsConnection!
+}
+
+"""A Radar edge"""
+type RadarEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The item at the end of edge."""
+  node: Radar!
+}
+
+type RadarHit {
+  id: ID!
+  status: RadarHitStatus!
+  image: URL!
+  page: URL!
+  distance: Float!
+}
+
+"""A SimilarWebItem edge"""
+type RadarHitEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The item at the end of edge."""
+  node: RadarHit!
+}
+
+"""A RadarHitsConnection connection"""
+type RadarHitsConnection {
+  """A list of node edges"""
+  edges: [RadarHitEdge!]!
+  """A list of nodes"""
+  nodes: [RadarHit!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""A RadarsConnection connection"""
+type RadarsConnection {
+  """A list of node edges"""
+  edges: [RadarEdge!]!
+  """A list of nodes"""
+  nodes: [Radar!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+type RequestBrandMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type RequestCurationMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type RequestRefreshMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+type SearchResultCounts {
+  total: Int!
+}
+
+"""A search result edge"""
+type SearchResultEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """Relevance score of the search result."""
+  score: Float!
+  """The search result at the end of edge."""
+  node: SearchResultItem!
+}
+
+"""A Search Result connection"""
+type SearchResultsConnection {
+  """A list of node edges"""
+  edges: [SearchResultEdge!]!
+  """A list of nodes"""
+  nodes: [SearchResultItem!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total counts of items in the connection."""
+  counts: SearchResultCounts!
+}
+
+type SubscribableEvent {
+  """Namespace of the event"""
+  namespace: String!
+  """The name of the event"""
+  name: String!
+  """A short name and/or description mostly for UI convenience"""
+  description: String!
+  """Minimum subscription urn scope required to subscribe to this event"""
+  subscriptionScope: String!
+}
+
+type TakeActionMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+  hit: TrackerHit
+}
+
+type Taxonomy {
+  countries: [Country!]!
+  geographicRegions: [GeographicRegion!]!
+  industries: [Industry!]!
+}
+
+type Tracker implements Node {
+  id: ID!
+  """The tracker's URN"""
+  urn: URN!
+  """Datetime when the tracker was created"""
+  createdAt: DateTime!
+  """Datetime when the tracker was last modified"""
+  updatedAt: DateTime
+  """Datetime for the next scheduled run"""
+  nextScheduledRunAt: DateTime
+  kind: TrackerKind!
+  status: TrackerStatus!
+  """The input image asset we compared against when tracker kind is IMAGE"""
+  asset: BrandImageAsset
+  """The input text we compare against when tracker kind is TEXT"""
+  text: String
+  """Matches of image web URLs which match to the input search asset"""
+  hits: TrackerHitsConnection!
+}
+
+"""A Tracker edge"""
+type TrackerEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The item at the end of edge."""
+  node: Tracker!
+}
+
+"""A TrackerHit edge"""
+type TrackerHitEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The item at the end of edge."""
+  node: TrackerHit!
+}
+
+"""A TrackerHitsConnection connection"""
+type TrackerHitsConnection {
+  """A list of node edges"""
+  edges: [TrackerHitEdge!]!
+  """A list of nodes"""
+  nodes: [TrackerHit!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+type TrackerImageHit implements Node {
+  id: ID!
+  """The Hit's URN"""
+  urn: URN!
+  """Datetime when the hit was created"""
+  createdAt: DateTime!
+  """Datetime when the hit was last modified"""
+  updatedAt: DateTime
+  status: TrackerHitStatus!
+  action: TrackerHitAction!
+  domain: FQDN!
+  page: URL!
+  image: URL!
+  distance: Float!
+  """Action priority for the hit"""
+  priority: Float!
+}
+
+type TrackerTextHit implements Node {
+  id: ID!
+  """The Hit's URN"""
+  urn: URN!
+  """Datetime when the hit was created"""
+  createdAt: DateTime!
+  """Datetime when the hit was last modified"""
+  updatedAt: DateTime
+  status: TrackerHitStatus!
+  action: TrackerHitAction!
+  domain: FQDN!
+  page: URL!
+  title: String!
+  textSnippet: String
+  """Action priority for the hit"""
+  priority: Float!
+}
+
+"""A TrackersConnection connection"""
+type TrackersConnection {
+  """A list of node edges"""
+  edges: [TrackerEdge!]!
+  """A list of nodes"""
+  nodes: [Tracker!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""A URN edge"""
+type UrnEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The item at the end of edge."""
+  node: URN!
+}
+
+"""A URN connection"""
+type UrnsConnection {
+  """A list of node edges"""
+  edges: [UrnEdge!]!
+  """A list of nodes"""
+  nodes: [URN!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+type Usage {
+  trackers: NonNegativeInt!
+  takeDownRequests: NonNegativeInt!
+  libraries: NonNegativeInt!
+}
+
+type User implements Node {
+  id: ID!
+  urn: URN!
+  """Datetime when the user was created. Accounts that predate timestamp records report the Unix epoch origin (1970-01-01T00:00:00Z)."""
+  createdAt: DateTime!
+  """Datetime when the user was last updated. Falls back to the creation datetime while the user has never been updated, and to the Unix epoch origin for accounts that predate timestamp records."""
+  updatedAt: DateTime!
+  email: EmailAddress!
+  name: String!
+  onboardedFeatures: [String!]!
+  """How the user described their own technical background. `null` until the user has answered."""
+  persona: UserPersona
+  """The primary use case the user selected for their account. `null` until the user has answered."""
+  useCase: UserUseCase
+  """Where the user first heard about Brandfetch. `null` until the user has answered."""
+  discoverySource: UserDiscoverySource
+}
+
+"""A User edge"""
+type UserEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The user at the end of edge."""
+  node: User!
+}
+
+type UserMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+  user: User
+}
+
+"""A Users connection"""
+type UsersConnection {
+  """A list of node edges"""
+  edges: [UserEdge!]!
+  """A list of nodes"""
+  nodes: [User!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+type Viewer {
+  """The current viewer's pending invitations to join organizations"""
+  invitations: [Invitation!]!
+  """The viewer's available organizations"""
+  organizations: [Organization]!
+  """Settings inherited by the current viewer"""
+  settings: ViewerSettings!
+  """Usage applicable to the current viewer"""
+  usage: Usage!
+  """Plans available to the current viewer"""
+  availableBillingPlans: [BillingPlan!]!
+  """Email associated with the current actor"""
+  email: String!
+  user: User!
+}
+
+type ViewerSettings {
+  quotas: Quotas
+}
+
+type Webhook implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  """Events to subscribe to"""
+  events: [EventName!]!
+  """Event URNs this webhook is subscribed to"""
+  subscriptions(first: Int = 100, after: ID): UrnsConnection!
+  """Who or What created this Webhook. Not yet populated: the recorded creator is an API key, which the Actor union cannot represent, so this currently resolves to null."""
+  createdBy: Actor
+  """URL of HTTPS endpoint where webhook events are delivered to"""
+  url: URL!
+  """Whether the webhook is enabled and receiving deliveries"""
+  enabled: Boolean!
+  """
+  The history of events delivered to the Webhook's URL, newest first.
+Deliveries are retained for 90 days.
+  """
+  deliveries(filter: WebhookDeliveryFilter, first: IntegerBetween1And100 = 100, after: ID): WebhookDeliveriesConnection!
+  """A shared secret used to sign the request payload"""
+  secret: String!
+  """A short name and/or description mostly for UI convenience"""
+  description: String
+}
+
+"""A Webhooks connection"""
+type WebhookDeliveriesConnection {
+  """A list of node edges"""
+  edges: [WebhookDeliveryEdge!]!
+  """A list of nodes"""
+  nodes: [WebhookDelivery!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """
+  The number of deliveries the webhook has recorded since it was created.
+This is a lifetime total, not the number of items in this connection: it
+includes deliveries older than the 90-day retention window, and a `filter`
+does not narrow it.
+  """
+  totalCount: Int!
+}
+
+type WebhookDelivery implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  payload: WebhookPayload!
+  deliveredAt: DateTime
+  status: WebhookDeliveryStatus
+  retry: WebhookDelivery
+  result: WebhookDeliveryResult
+}
+
+"""A WebhookDelivery edge"""
+type WebhookDeliveryEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The item at the end of edge."""
+  node: WebhookDelivery!
+}
+
+"""The HTTP Response from a Webhook Delivery attempt"""
+type WebhookDeliveryResult {
+  body: String
+  headers: [HttpHeader]!
+  message: String
+  statusCode: Int!
+}
+
+"""A Webhook edge"""
+type WebhookEdge {
+  """A cursor for use in pagination."""
+  cursor: ID!
+  """The item at the end of edge."""
+  node: Webhook!
+}
+
+type WebhookMutationResult implements MutationResult {
+  code: String!
+  success: Boolean!
+  message: String!
+  webhook: Webhook
+}
+
+type WebhookPayload implements Node {
+  id: ID!
+  urn: URN!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  timestamp: DateTime!
+  type: EventName!
+  """Stringified JSON event payload"""
+  data: JSON!
+}
+
+"""A Webhooks connection"""
+type WebhooksConnection {
+  """A list of node edges"""
+  edges: [WebhookEdge!]!
+  """A list of nodes"""
+  nodes: [Webhook!]!
+  """Information for pagination"""
+  pageInfo: PageInfo!
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+scalar Base64String
+
+"""The `Boolean` scalar type represents `true` or `false`."""
+"""A country code as defined by ISO 3166-1 alpha-2"""
+scalar CountryCode
+
+"""A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar."""
+scalar DateTime
+
+"""A field whose value conforms to the standard internet email address format as specified in RFC822: https://www.w3.org/Protocols/rfc822/."""
+scalar EmailAddress
+
+"""A string which contains only lowercase letters, dots and hyphens. For example: "brand.updated""""
+scalar EventName
+
+"""A string which defines a fully qualified domain name. For example: "brandfetch.com""""
+scalar FQDN
+
+"""The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point)."""
+"""The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `"4"`) or integer (such as `4`) input value will be accepted as an ID."""
+"""The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1."""
+"""An integer with a value between 1 and 100"""
+scalar IntegerBetween1And100
+
+"""The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf)."""
+scalar JSON
+
+scalar NonEmptyString
+
+scalar NonNegativeInt
+
+"""Integers that will have a value greater than 0."""
+scalar PositiveInt
+
+"""The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text."""
+"""A string with a maximum of 100 characters"""
+scalar StringWithMaxLengthOf100
+
+"""A string with a maximum of 1000 characters"""
+scalar StringWithMaxLengthOf1000
+
+"""A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt."""
+scalar URL
+
+"""A string which defines a URN. For example: "urn:brandfetch:brand:id12345""""
+scalar URN
+
+union Actor = User
+
+"""A union of all types that can be returned from a search"""
+union SearchResultItem = Brand
+
+union TrackerHit = TrackerImageHit | TrackerTextHit
+

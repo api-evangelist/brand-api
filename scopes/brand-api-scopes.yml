@@ -1,0 +1,47 @@
+generated: '2026-08-14'
+method: probed
+source: https://developers.brandfetch.com/.well-known/oauth-authorization-server
+docs: https://docs.brandfetch.com/mcp/overview
+note: >-
+  Brandfetch's OpenAPI declares no oauth2 security scheme — the REST API is bearer
+  API-key only — so derive-oauth-scopes.py correctly found nothing. The OAuth surface
+  exists solely for the MCP server, and its scope model is published anonymously in the
+  RFC 8414 authorization-server metadata. Exactly one scope is advertised. Read-only is
+  the whole authorization model: there is no write scope because the public product has
+  no write surface.
+schemes:
+  - name: brandfetch-mcp-oauth
+    type: oauth2
+    source: https://developers.brandfetch.com/.well-known/oauth-authorization-server
+    issuer: https://developers.brandfetch.com
+    applies_to: https://mcp.brandfetch.io/mcp
+    flows:
+      - flow: authorizationCode
+        authorizationUrl: https://developers.brandfetch.com/oauth/authorize
+        tokenUrl: https://developers.brandfetch.com/api/oauth/token
+        registrationUrl: https://developers.brandfetch.com/api/oauth/register
+        pkce: [S256]
+        token_endpoint_auth_methods: [none]
+        response_types: [code]
+scopes:
+  - scope: read
+    description: >-
+      Read access to Brandfetch brand data through the MCP server. The only scope
+      advertised in scopes_supported; it covers every MCP tool (brand_search, get_brand,
+      get_brand_context, enrich_transaction, build_logo_urls, get_asset_base64,
+      send_feedback).
+    flows: [authorizationCode]
+    sources: [https://developers.brandfetch.com/.well-known/oauth-authorization-server]
+non_oauth_credentials:
+  - {name: API key, transport: 'Authorization: Bearer <key>', scoped: false,
+     applies_to: [Brand API, Brand Context API, Transaction API, Viewer API]}
+  - {name: MCP token, prefix: 'bf1.', transport: 'Authorization: Bearer <token>', scoped: false,
+     applies_to: [MCP server], note: 'Non-interactive alternative to the OAuth flow.'}
+  - {name: Client ID, transport: '?c=<client_id> query parameter', scoped: false,
+     applies_to: [Logo API, Brand Search API], note: 'Public, embeddable, not a secret.'}
+x-evidence:
+  fetched: '2026-08-14'
+  url: https://developers.brandfetch.com/.well-known/oauth-authorization-server
+  http_status: 200
+  content_type: application/json
+  file: ../well-known/brand-api-oauth-authorization-server.json

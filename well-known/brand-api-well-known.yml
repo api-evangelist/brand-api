@@ -1,0 +1,101 @@
+generated: '2026-08-14'
+method: probed
+source: live GET of /.well-known/* on every Brandfetch host in apis.yml + OpenAPI servers[]
+summary:
+  hosts_probed: 7
+  documents_found: 5
+  real_hits: 5
+  note: >-
+    Brandfetch serves no security.txt and no api-catalog anywhere. It DOES serve a
+    real A2A agent card on the docs host, a provider-published Agent Skill under
+    /.well-known/agent-skills/, an RFC 9728 OAuth protected-resource document on the
+    MCP host, and an RFC 8414 authorization-server document on the developer portal —
+    which together make the MCP surface fully self-describing to an anonymous client.
+    cdn.brandfetch.io answers HTTP 200 with an HTML single-page-app shell for EVERY
+    /.well-known/* path probed; those are recorded as soft-200 misses, not documents.
+hosts:
+  - host: https://docs.brandfetch.com
+    documents:
+      - {path: /.well-known/agent-card.json, status: 200, content_type: application/json,
+         file: ../a2a/brand-api-agent-card.json, real: true}
+      - {path: /.well-known/agent-skills/brandfetch/skill.md, status: 200, content_type: text/markdown,
+         file: ../skills/brand-api-brandfetch.md, real: true}
+      - {path: /.well-known/mcp.json, status: 200, content_type: application/json,
+         file: brand-api-mcp.json, real: true,
+         note: 'Mintlify docs-search MCP server for the documentation site itself, not the Brandfetch product MCP at mcp.brandfetch.io'}
+      - {path: /.well-known/security.txt, status: 404}
+      - {path: /.well-known/openid-configuration, status: 404}
+      - {path: /.well-known/oauth-authorization-server, status: 404}
+      - {path: /.well-known/oauth-protected-resource, status: 404}
+      - {path: /.well-known/api-catalog, status: 404}
+      - {path: /.well-known/ai-plugin.json, status: 404}
+      - {path: /.well-known/agent.json, status: 404}
+  - host: https://mcp.brandfetch.io
+    documents:
+      - {path: /.well-known/oauth-protected-resource, status: 200, content_type: application/json,
+         file: brand-api-oauth-protected-resource.json, real: true, spec: RFC 9728}
+      - {path: /.well-known/security.txt, status: 404}
+      - {path: /.well-known/openid-configuration, status: 404}
+      - {path: /.well-known/oauth-authorization-server, status: 404}
+      - {path: /.well-known/api-catalog, status: 404}
+      - {path: /.well-known/ai-plugin.json, status: 404}
+      - {path: /.well-known/agent-card.json, status: 404}
+      - {path: /.well-known/agent.json, status: 404}
+  - host: https://developers.brandfetch.com
+    documents:
+      - {path: /.well-known/oauth-authorization-server, status: 200, content_type: application/json,
+         file: brand-api-oauth-authorization-server.json, real: true, spec: RFC 8414}
+      - {path: /.well-known/security.txt, status: 404}
+      - {path: /.well-known/openid-configuration, status: 404}
+      - {path: /.well-known/oauth-protected-resource, status: 404}
+      - {path: /.well-known/api-catalog, status: 404}
+      - {path: /.well-known/ai-plugin.json, status: 404}
+      - {path: /.well-known/agent-card.json, status: 404}
+      - {path: /.well-known/agent.json, status: 404}
+  - host: https://brandfetch.com
+    documents:
+      - {path: /.well-known/security.txt, status: 404}
+      - {path: /.well-known/openid-configuration, status: 404}
+      - {path: /.well-known/oauth-authorization-server, status: 404}
+      - {path: /.well-known/oauth-protected-resource, status: 404}
+      - {path: /.well-known/api-catalog, status: 404}
+      - {path: /.well-known/ai-plugin.json, status: 404}
+      - {path: /.well-known/agent-card.json, status: 404}
+      - {path: /.well-known/agent.json, status: 404}
+  - host: https://api.brandfetch.io
+    note: 'API Gateway returns 403 {"message":"Missing Authentication Token"} for every unrouted path, including all of /.well-known/*'
+    documents:
+      - {path: /.well-known/security.txt, status: 403}
+      - {path: /.well-known/openid-configuration, status: 403}
+      - {path: /.well-known/oauth-authorization-server, status: 403}
+      - {path: /.well-known/oauth-protected-resource, status: 403}
+      - {path: /.well-known/api-catalog, status: 403}
+      - {path: /.well-known/ai-plugin.json, status: 403}
+      - {path: /.well-known/agent-card.json, status: 403}
+      - {path: /.well-known/agent.json, status: 403}
+  - host: https://graphql.brandfetch.io
+    documents:
+      - {path: /.well-known/security.txt, status: 404}
+      - {path: /.well-known/openid-configuration, status: 404}
+      - {path: /.well-known/oauth-authorization-server, status: 404}
+      - {path: /.well-known/oauth-protected-resource, status: 404}
+      - {path: /.well-known/api-catalog, status: 404}
+      - {path: /.well-known/ai-plugin.json, status: 404}
+      - {path: /.well-known/agent-card.json, status: 404}
+      - {path: /.well-known/agent.json, status: 404}
+  - host: https://cdn.brandfetch.io
+    note: >-
+      SOFT-200 CATCH-ALL. Every /.well-known/* path returns HTTP 200 with
+      content-type text/html and a Next.js SPA shell body. None of these is a
+      document; all are recorded as misses. Do not credit this host with any
+      well-known surface.
+    documents:
+      - {path: /.well-known/security.txt, status: 200, content_type: 'text/html', real: false}
+      - {path: /.well-known/openid-configuration, status: 200, content_type: 'text/html', real: false}
+      - {path: /.well-known/oauth-authorization-server, status: 200, content_type: 'text/html', real: false}
+      - {path: /.well-known/oauth-protected-resource, status: 200, content_type: 'text/html', real: false}
+      - {path: /.well-known/api-catalog, status: 200, content_type: 'text/html', real: false}
+      - {path: /.well-known/ai-plugin.json, status: 200, content_type: 'text/html', real: false}
+      - {path: /.well-known/agent-card.json, status: 200, content_type: 'text/html', real: false}
+      - {path: /.well-known/agent.json, status: 200, content_type: 'text/html', real: false}
+security_txt: none

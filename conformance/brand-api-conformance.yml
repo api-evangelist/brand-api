@@ -1,0 +1,85 @@
+generated: '2026-08-14'
+method: searched
+source: https://docs.brandfetch.com/support/security-soc2
+sources:
+  - https://docs.brandfetch.com/support/security-soc2
+  - https://trust.brandfetch.com
+  - https://docs.brandfetch.com/delivery-methods/webhooks/overview
+  - https://mcp.brandfetch.io/.well-known/oauth-protected-resource
+  - https://developers.brandfetch.com/.well-known/oauth-authorization-server
+  - openapi/brand-api-brandfetch-openapi.yml
+standards:
+  - id: openapi-3.0
+    conforms: true
+    evidence: 'Published OpenAPI 3.0.1 at https://docs.brandfetch.com/openapi.json (9 operations, all with operationIds).'
+  - id: graphql
+    conforms: true
+    evidence: >-
+      https://graphql.brandfetch.io answers anonymous introspection with a full 161-type
+      schema. Query execution is Enterprise-gated.
+  - id: mcp
+    conforms: true
+    evidence: >-
+      Hosted streamable-HTTP MCP server at https://mcp.brandfetch.io/mcp; official server
+      source at github.com/Brandfetch/brandfetch-mcp-server (FastMCP).
+  - id: a2a
+    conforms: partial
+    evidence: >-
+      Agent card served at https://docs.brandfetch.com/.well-known/agent-card.json, but
+      graded `flavored` against A2A 1.0.0 — see a2a/brand-api-a2a.yml.
+  - id: agent-skills
+    conforms: true
+    evidence: 'Provider-published Agent Skill at /.well-known/agent-skills/brandfetch/skill.md.'
+  - id: oauth2
+    conforms: true
+    evidence: >-
+      MCP server authenticates with OAuth 2.1 authorization_code + PKCE S256;
+      authorization server metadata published at
+      https://developers.brandfetch.com/.well-known/oauth-authorization-server.
+  - id: rfc8414-oauth-authorization-server-metadata
+    conforms: true
+    evidence: 'https://developers.brandfetch.com/.well-known/oauth-authorization-server returns 200 with issuer/authorization_endpoint/token_endpoint/registration_endpoint.'
+  - id: rfc9728-oauth-protected-resource-metadata
+    conforms: true
+    evidence: 'https://mcp.brandfetch.io/.well-known/oauth-protected-resource returns 200; the 401 challenge also carries resource_metadata in WWW-Authenticate.'
+  - id: rfc7591-dynamic-client-registration
+    conforms: true
+    evidence: 'registration_endpoint https://developers.brandfetch.com/api/oauth/register is advertised in the authorization-server metadata.'
+  - id: standard-webhooks-1.0
+    conforms: true
+    evidence: 'Provider states the webhook implementation follows v1 of the Standard Webhooks specification.'
+  - id: soc2-type-2
+    conforms: true
+    evidence: >-
+      "Brandfetch is SOC 2 Type 2 compliant, having completed an independent audit
+      covering the Security trust service category" — docs.brandfetch.com/support/security-soc2;
+      report available via the Vanta-hosted Trust Center at https://trust.brandfetch.com.
+  - id: openid-connect
+    conforms: false
+    evidence: 'No /.well-known/openid-configuration on any host (all 404).'
+  - id: rfc9457-problem-details
+    conforms: false
+    evidence: 'Errors are {"message": "<string>"} with content-type application/json; no application/problem+json anywhere in the spec.'
+  - id: rfc9116-security-txt
+    conforms: false
+    evidence: 'No /.well-known/security.txt on brandfetch.com, docs.brandfetch.com, developers.brandfetch.com, mcp.brandfetch.io or graphql.brandfetch.io (all 404).'
+  - id: rfc8594-sunset-header
+    conforms: false
+    evidence: 'No deprecation policy, no Sunset or Deprecation header documented; the one legacy route carries no deprecated flag in the spec.'
+  - id: rfc9111-well-known-api-catalog
+    conforms: false
+    evidence: '/.well-known/api-catalog returns 404 on every host.'
+  - id: asyncapi
+    conforms: false
+    evidence: 'Webhooks are documented in prose only; /asyncapi.yaml and /asyncapi.json both 404 and llms.txt lists only openapi.json.'
+  - id: json-api
+    conforms: false
+    evidence: 'Plain JSON responses; no JSON:API document structure, media type or links object.'
+  - id: oauth-scopes
+    conforms: partial
+    evidence: 'Exactly one scope is advertised (`read`) and it applies only to the MCP surface; the REST API is bearer-key with no scope model.'
+compliance_program:
+  published: true
+  certifications: ['SOC 2 Type 2']
+  trust_center: https://trust.brandfetch.com
+  see: security/brand-api-trust-center.yml

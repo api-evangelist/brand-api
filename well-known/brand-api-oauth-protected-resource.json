@@ -1,0 +1,1 @@
+{"resource":"https://mcp.brandfetch.io","authorization_servers":["https://developers.brandfetch.com"],"bearer_methods_supported":["header"],"resource_documentation":"https://developers.brandfetch.com/docs/mcp","resource_metadata":"https://mcp.brandfetch.io/.well-known/oauth-protected-resource"}

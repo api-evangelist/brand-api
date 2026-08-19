@@ -1,0 +1,42 @@
+generated: '2026-08-14'
+method: searched
+probe: true
+source: https://docs.brandfetch.com/support/security-soc2
+url: https://trust.brandfetch.com
+platform: Vanta
+certifications:
+  - SOC 2 Type 2
+scope:
+  trust_service_categories: [Security]
+  note: >-
+    The independent audit covers the Security trust service category only. Availability,
+    Confidentiality, Processing Integrity and Privacy are not claimed.
+practices:
+  data_minimization: >-
+    Brandfetch states it collects no PII beyond login email addresses used for
+    passwordless authentication.
+  log_retention: 'Up to 90 days; may include IP addresses and User-Agent strings.'
+  data_scope: >-
+    The API processes only publicly available data tied to domain names and does not
+    access, store or interact with private or customer-owned data.
+  encryption: 'AES-256 at rest, TLS in transit.'
+  hosting: 'Amazon Web Services (development, staging and production).'
+  sdlc: 'OWASP best practices with human review augmented by AI.'
+evidence:
+  - source: https://docs.brandfetch.com/support/security-soc2
+    http_status: 200
+    keywords: ['SOC 2 Type 2', 'Trust Center', 'AES-256', 'OWASP', 'AWS']
+    quote: >-
+      "Brandfetch is SOC 2 Type 2 certified. You can access our report and security
+      documentation at our Trust Center."
+  - source: https://trust.brandfetch.com
+    http_status: 200
+    note: >-
+      Vanta-hosted trust report. The page is client-rendered, so the certification list
+      is not readable from the raw HTML — only the title "Brandfetch Trust Center" and the
+      Vanta asset manifest are. The certification recorded above is taken from
+      Brandfetch's own docs page, not inferred from this shell. The automated
+      probe-security-programs.py pass returned trust=none for exactly this reason.
+note: >-
+  Requesting the SOC 2 report itself requires accepting an NDA through the Vanta portal;
+  the report was not retrieved and is not asserted beyond Brandfetch's own published claim.

@@ -1,0 +1,113 @@
+generated: '2026-08-14'
+method: derived
+source: openapi/brand-api-brandfetch-openapi.yml
+sources:
+  - openapi/brand-api-brandfetch-openapi.yml
+  - https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md
+format: proprietary
+envelope:
+  media_type: application/json
+  shape: '{"message": "<string>"}'
+  schema: '#/components/schemas/ErrorResponse'
+  fields:
+    - {name: message, type: string, required: true}
+rfc9457: false
+note: >-
+  Brandfetch does not implement RFC 9457 problem+json. Every error is a JSON object with
+  a single `message` string and no machine-readable code, so a client must branch on the
+  HTTP status and then string-match the message. The message values ARE constrained —
+  each 4xx response in the spec declares `message` as a single-value enum — which makes
+  them stable enough to match on, and they are transcribed verbatim below. No 5xx
+  response is declared anywhere in the spec; server-error behaviour is undocumented.
+problems:
+  - status: 400
+    title: Bad Request
+    message: Bad Request
+    remediation: >-
+      Malformed identifier or request body. Prefer the explicit type routes
+      (/v2/brands/domain/…, /ticker/…, /isin/…, /crypto/…) over the bare auto-detect
+      route, which resolves in the order domain -> ticker -> ISIN -> crypto and can
+      mis-classify an identifier.
+    retryable: false
+    source_operations:
+      - getBrandData
+      - getBrandDataByDomain
+      - getBrandDataByTicker
+      - getBrandDataByIsin
+      - getBrandDataByCrypto
+      - getBrandContext
+      - getBrandFromTransaction
+  - status: 401
+    title: Unauthorized
+    message: Unauthorized
+    remediation: >-
+      The Authorization header is missing or the credential is unrecognised. Brand API,
+      Brand Context API, Transaction API and Viewer API take `Authorization: Bearer
+      <api_key>`; Logo API and Brand Search API take a `?c=<client_id>` query parameter
+      instead. Mixing the two is the documented failure mode. Call GET /v2/viewer to
+      confirm which credential you are presenting.
+    retryable: false
+    source_operations:
+      - getBrandData
+      - getBrandDataByDomain
+      - getBrandDataByTicker
+      - getBrandDataByIsin
+      - getBrandDataByCrypto
+      - getBrandContext
+      - getBrandFromTransaction
+      - getViewer
+  - status: 403
+    title: Forbidden
+    message: null
+    remediation: >-
+      The credential was rejected — e.g. a revoked API key or an expired session token.
+      Mint a new key in the developer dashboard. Declared with no response body.
+    retryable: false
+    source_operations: [getViewer]
+  - status: 404
+    title: Not Found
+    messages:
+      - {message: '<Not Found> or <Invalid Domain Name>', operations: [getBrandData, getBrandDataByDomain, getBrandContext]}
+      - {message: '<Not Found>', operations: [getBrandDataByTicker]}
+      - {message: '<Not Found> or <Invalid ISIN>', operations: [getBrandDataByIsin]}
+      - {message: '<Not Found> or <Invalid Crypto Symbol>', operations: [getBrandDataByCrypto]}
+      - {message: 'Not Found', operations: [getBrandFromTransaction]}
+    remediation: >-
+      The identifier is syntactically invalid, or Brandfetch has no brand indexed for it.
+      Distinguish the two by validating the identifier locally first. For getBrandContext
+      a 404 can also mean the context could not be resolved for an otherwise known domain.
+    retryable: false
+    source_operations:
+      - getBrandData
+      - getBrandDataByDomain
+      - getBrandDataByTicker
+      - getBrandDataByIsin
+      - getBrandDataByCrypto
+      - getBrandContext
+      - getBrandFromTransaction
+  - status: 429
+    title: API key quota exceeded
+    message: API key quota exceeded
+    remediation: >-
+      Monthly quota or a 5-minute throughput window is exhausted. Back off exponentially
+      with jitter and re-read the x-api-key-quota / x-api-key-approximate-usage response
+      headers. No Retry-After is documented. See rate-limits/brand-api-rate-limits.yml.
+    retryable: true
+    source_operations:
+      - getBrandData
+      - getBrandDataByDomain
+      - getBrandDataByTicker
+      - getBrandDataByIsin
+      - getBrandDataByCrypto
+      - getBrandContext
+      - getBrandFromTransaction
+non_error_edge_cases:
+  - status: 204
+    operation: getBrandContext
+    meaning: >-
+      Returned when cachedOnly=true and no brand context is currently cached. A success,
+      not an error — but an empty body, so a client that assumes JSON will break.
+gaps:
+  - 'No 5xx responses declared on any operation.'
+  - 'No machine-readable error code — only an HTTP status and a human message string.'
+  - 'searchBrands (GET /v2/search/{name}) declares only a 200; its error behaviour is undocumented.'

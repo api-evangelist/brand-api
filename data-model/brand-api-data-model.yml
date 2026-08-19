@@ -1,0 +1,156 @@
+generated: '2026-08-14'
+method: derived
+source: openapi/brand-api-brandfetch-openapi.yml
+sources:
+  - openapi/brand-api-brandfetch-openapi.yml
+  - graphql/brand-api-brandfetch.graphql
+  - https://docs.brandfetch.com/changelog/overview
+note: >-
+  Derived from the 18 component schemas in the published OpenAPI plus the URN forms the
+  spec documents. The REST model is deliberately shallow — one root entity (Brand) with
+  embedded value objects, no cross-entity foreign keys and no pagination, because the API
+  answers a single question: "what does this brand look like". The relational depth lives
+  in the GraphQL account plane (Organization -> ApiKey -> ApiRequestLog -> Webhook -> Quotas),
+  which is Enterprise-only and modelled separately at the end of this file.
+identifiers:
+  scheme: urn
+  form: 'urn:brandfetch:<type>:<id>'
+  examples:
+    - 'urn:brandfetch:brand:<id>'
+    - 'urn:brandfetch:user:<id>'
+    - 'urn:brandfetch:organization:{organizationId}:apikey:{id}'
+    - 'urn:brandfetch:organization:<org>:webhook:<hook>:event:<event>'
+  lookup_keys:
+    - {key: domain, example: nike.com, route: '/v2/brands/domain/{domain}'}
+    - {key: brand-id, example: id_0dwKPKT, route: '/v2/brands/{identifier}'}
+    - {key: ticker, example: NKE, route: '/v2/brands/ticker/{ticker}', note: 'stock and ETF tickers'}
+    - {key: isin, example: US6541061031, route: '/v2/brands/isin/{isin}'}
+    - {key: crypto, example: BTC, route: '/v2/brands/crypto/{symbol}'}
+entities:
+  - name: Brand
+    schema: BrandResponse
+    root: true
+    domain: brand-data
+    key: id
+    urn: 'urn:brandfetch:brand:<id>'
+    fields_of_note:
+      - {name: qualityScore, type: number, range: '0-1',
+         note: 'Designed to split into thirds — poor / OK / high. Brandfetch states the calculation may change over time.'}
+      - {name: claimed, type: boolean, note: 'true when the brand owner has claimed the profile.'}
+      - {name: isNsfw, type: boolean, note: 'Gated by the allowNsfw query parameter on every lookup route.'}
+      - {name: domain, type: string}
+  - name: Company
+    schema: 'BrandResponse.company (inline object)'
+    domain: firmographics
+    note: >-
+      Firmographic block added 2024-06: employees, year founded, industry categorization,
+      company kind, and HQ geography. Inline on BrandResponse rather than a $ref.
+  - name: Location
+    schema: Location
+    domain: firmographics
+    fields: [city, country, countryCode, region, state, subregion]
+  - name: Industry
+    schema: Industry
+    domain: taxonomy
+    key: id
+    fields: [id, score, slug, name, emoji, parent]
+    note: 'Self-referencing taxonomy — score is a 0-1 confidence in the classification.'
+  - name: IndustryParent
+    schema: IndustryParent
+    domain: taxonomy
+    key: id
+  - name: Format
+    schema: Format
+    domain: assets
+    fields: [src, format, height, width, size, background]
+    note: 'One renderable file. Every logo, icon, symbol and image resolves to a list of Formats.'
+  - name: BrandContext
+    schema: BrandContextResponse
+    root: true
+    domain: agent-context
+    note: >-
+      A parallel root entity, not a projection of Brand. Keyed by domain, resolved live
+      (or served from cache with cachedOnly=true) and returned as JSON or text/markdown.
+  - name: BrandContextMeta
+    schema: BrandContextMeta
+    fields: [domain, canonical_name, resolved_at]
+  - name: BrandContextIdentity
+    schema: BrandContextIdentity
+    fields: [tagline, mission, description, tags]
+  - name: BrandContextPositioning
+    schema: BrandContextPositioning
+  - name: BrandContextTargetAudience
+    schema: BrandContextTargetAudience
+  - name: BrandContextProductOrService
+    schema: BrandContextProductOrService
+  - name: BrandContextBrand
+    schema: BrandContextBrand
+  - name: BrandContextVoice
+    schema: BrandContextVoice
+  - name: BrandContextStyle
+    schema: BrandContextStyle
+  - name: Viewer
+    schema: 'ViewerApiKeyResponse | ViewerUserResponse'
+    root: true
+    domain: identity
+    note: 'A oneOf discriminated by `type` — the credential presented is either an API key or a user session.'
+  - name: ApiKey
+    schema: ViewerApiKeyResponse
+    domain: identity
+    key: id
+    urn: 'urn:brandfetch:organization:{organizationId}:apikey:{id}'
+  - name: User
+    schema: ViewerUserResponse
+    domain: identity
+    key: id
+    urn: 'urn:brandfetch:user:{id}'
+  - name: Organization
+    schema: 'ViewerApiKeyResponse.organization (inline object)'
+    domain: identity
+  - name: ErrorResponse
+    schema: ErrorResponse
+    domain: errors
+    see: errors/brand-api-problem-types.yml
+relationships:
+  - {from: Brand, to: Company, kind: has_one, via: company, binding: inline-object}
+  - {from: Company, to: Location, kind: has_one, via: location, binding: schema-shape}
+  - {from: Company, to: Industry, kind: has_many, via: industries, binding: schema-shape}
+  - {from: Industry, to: IndustryParent, kind: belongs_to, via: parent, binding: $ref}
+  - {from: Brand, to: Format, kind: has_many, via: logos, binding: array-of-objects,
+     note: 'each logo carries formats[] of Format'}
+  - {from: Brand, to: Format, kind: has_many, via: images, binding: array-of-objects}
+  - {from: Brand, to: 'Link', kind: has_many, via: links, binding: array-of-objects,
+     note: 'social media links; inline, no component schema'}
+  - {from: Brand, to: 'Color', kind: has_many, via: colors, binding: array-of-objects,
+     note: 'accent, dark, light and palette colors; inline, no component schema'}
+  - {from: Brand, to: 'Font', kind: has_many, via: fonts, binding: array-of-objects,
+     note: 'title and body fonts; inline, no component schema'}
+  - {from: BrandContext, to: BrandContextMeta, kind: has_one, via: meta, binding: $ref}
+  - {from: BrandContext, to: BrandContextIdentity, kind: has_one, via: identity, binding: $ref}
+  - {from: BrandContext, to: BrandContextPositioning, kind: has_one, via: positioning, binding: $ref}
+  - {from: BrandContext, to: BrandContextBrand, kind: has_one, via: brand, binding: $ref}
+  - {from: BrandContextPositioning, to: BrandContextTargetAudience, kind: has_many, via: target_audience, binding: $ref}
+  - {from: BrandContextPositioning, to: BrandContextProductOrService, kind: has_many, via: products_and_services, binding: $ref}
+  - {from: BrandContextBrand, to: BrandContextVoice, kind: has_one, via: voice, binding: $ref}
+  - {from: BrandContextBrand, to: BrandContextStyle, kind: has_one, via: style, binding: $ref}
+  - {from: ApiKey, to: Organization, kind: belongs_to, via: organization, binding: inline-object}
+  - {from: BrandContext, to: Brand, kind: references, via: 'meta.domain', binding: soft-key,
+     note: 'Both are keyed by domain; there is no id-level join between them.'}
+graphql_account_plane:
+  note: >-
+    The GraphQL schema (Enterprise-only for execution, but openly introspectable) carries
+    the relational model the REST API does not expose. Recorded for completeness — see
+    graphql/brand-api-brandfetch.graphql.
+  entities: [Viewer, Organization, User, Invitation, ApiClient, ApiKey, ApiRequestLog,
+             LogoCdnRequestLog, Webhook, WebhookDelivery, WebhookPayload, SubscribableEvent,
+             Quotas, QuotaUsage, QuotaUsageHistory, ApiCredits, BillingSubscription, BillingPlan,
+             Brand, BrandAsset, BrandImageAsset, AssetCollection, AssetFolder, Company,
+             Taxonomy, Industry, Country, City, GeographicRegion, GeographicAdministrativeDivision,
+             Radar, RadarHit, Tracker, TrackerHit, TrackerImageHit, TrackerTextHit]
+  pagination: 'Relay cursor connections (PageInfo + *Connection/*Edge)'
+  node_interface: true
+counts:
+  rest_component_schemas: 18
+  rest_entities_modelled: 19
+  rest_relationships: 21
+  graphql_types: 161

@@ -1,0 +1,85 @@
+generated: '2026-08-14'
+method: searched
+source: https://docs.brandfetch.com/changelog/overview
+scheme: dated-narrative
+note: >-
+  Brandfetch's changelog is a dated narrative of product releases labelled by month, not
+  a semantic-version release log — there are no version numbers to cite. Entries are
+  transcribed from the provider's own page; the recent window is captured here, and the
+  live page remains the source of truth.
+current_version: v2
+latest_entry: '2026-07'
+entry_count_on_page: 12
+entries:
+  - date: '2026-07'
+    title: 'No-code integrations: Zapier, Make & n8n'
+    breaking: false
+    additions: [Zapier app, Make app, n8n community node]
+    highlights: >-
+      Brandfetch became available on Zapier, Make and n8n. Lookup by domain, stock/ETF
+      ticker, crypto symbol or ISIN can now be mapped into no-code workflows.
+    docs: https://docs.brandfetch.com/integrations/overview
+  - date: '2026-05'
+    title: Brand Context API and MCP Server
+    breaking: false
+    additions: ['GET /v2/context/{domain}', 'MCP server at https://mcp.brandfetch.io/mcp']
+    highlights: >-
+      Two agent-facing launches in one release. The Brand Context API returns a
+      structured, narrative brand profile (identity, positioning, voice, visual style)
+      for grounding LLMs. The MCP server exposes brand data to Claude, Cursor, Windsurf
+      and other MCP clients with no code.
+    docs: https://docs.brandfetch.com/mcp/overview
+  - date: '2026-01'
+    title: ETF ticker support in Brand API and Logo API
+    breaking: false
+    additions: ['top 10,000 ETFs from 300+ US and European providers']
+    highlights: 'Querying by ETF ticker returns the provider''s logo.'
+  - date: '2025-12'
+    title: Cryptocurrency support and explicit type routes
+    breaking: false
+    additions: ['top 2000 crypto symbols', '/domain/, /ticker/, /isin/, /crypto/ routes']
+    highlights: >-
+      Crypto symbols (BTC, ETH) joined domains, tickers and ISINs. Explicit type routes
+      were introduced to prevent identifier collisions; the original auto-detect route
+      still works but is now labelled legacy and no longer recommended.
+    soft_deprecation: 'GET /v2/brands/{identifier} (auto-detect)'
+  - date: '2025-04'
+    title: Query by ISIN and stock ticker
+    breaking: false
+    additions: ['/v2/brands/isin/{isin}', '/v2/brands/ticker/{ticker}']
+    highlights: 'Financial identifiers joined domain and Brand ID as first-class lookup keys.'
+  - date: '2025-03'
+    title: 'Transaction API'
+    breaking: false
+    additions: ['POST /v2/brands/transaction']
+    highlights: >-
+      Resolves a raw statement descriptor plus an ISO 3166-1 alpha-2 country code into
+      merchant identity — e.g. "STARBUCKS 1523 OMAHA NE" + US -> starbucks.com.
+  - date: '2025-01'
+    title: '404 fallback for Logo API'
+    breaking: false
+    additions: ['fallback/404']
+    highlights: >-
+      A fourth fallback option alongside transparent, lettermark and brandfetch, letting
+      a caller receive a real 404 when no logo exists instead of a placeholder image.
+  - date: '2024-08'
+    title: Logo API
+    breaking: false
+    additions: [cdn.brandfetch.io logo CDN]
+    highlights: >-
+      Launch of the free, no-attribution Logo CDN with type/theme/size/fallback
+      transformations, meant to be embedded directly in <img> tags.
+  - date: '2024-07'
+    title: Brand Quality Score
+    breaking: false
+    additions: [qualityScore]
+    highlights: >-
+      A 0-1 float on every brand indicating data quality, designed to split into thirds
+      (poor / OK / high). Factors in data recency, whether the brand is claimed, manual
+      verification and domain ranking. Brandfetch states the calculation may change over
+      time while preserving the thirds split.
+  - date: '2024-06'
+    title: Brand firmographics
+    breaking: false
+    additions: [employees, yearFounded, industries, company kind, HQ location]
+    highlights: 'Firmographic attributes added to the brand object on the Brands API.'

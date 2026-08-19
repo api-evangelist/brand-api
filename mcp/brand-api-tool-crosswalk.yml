@@ -1,0 +1,123 @@
+generated: '2026-08-14'
+method: derived
+source: mcp/brand-api-mcp.yml + openapi/brand-api-brandfetch-openapi.yml + graphql/brand-api-brandfetch.graphql
+note: >-
+  Brandfetch runs three overlapping-but-non-identical surfaces. REST (9 operations) is
+  the public product core. MCP (7 tools) covers the same core minus the credential
+  endpoint, plus two client-side helpers that make no API call at all. GraphQL is the
+  account-plane schema behind the developer dashboard — brand lookup plus organizations,
+  API keys, webhooks, quotas, billing and Brand Police monitoring — and almost none of it
+  has a REST equivalent. Mapping confidence is capped at `high` for tools whose backing
+  REST operation is named unambiguously in the provider's own documentation; live MCP
+  `tools/list` introspection is OAuth-gated so no tool inputSchema was observed directly.
+surfaces:
+  openapi:
+    file: openapi/brand-api-brandfetch-openapi.yml
+    source: https://docs.brandfetch.com/openapi.json
+    operations: 9
+    gated: false
+  mcp:
+    url: https://mcp.brandfetch.io/mcp
+    tools: 7
+    gated: true
+    gate: 'tools/list returns HTTP 401 with an RFC 9728 OAuth challenge'
+  graphql:
+    url: https://graphql.brandfetch.io
+    file: graphql/brand-api-brandfetch.graphql
+    gated: false
+    gate_note: >-
+      Anonymous introspection is OPEN and returned the full 161-type schema on
+      2026-08-14, but query EXECUTION is documented as Enterprise-only. The schema is
+      readable; the data is not.
+crosswalk:
+  - tool: brand_search
+    category: discovery
+    rest: [searchBrands]
+    binding: rest
+    confidence: high
+    note: >-
+      Backing REST op GET /v2/search/{name}?c={clientId} takes a Client ID query
+      parameter rather than a bearer token; the MCP server supplies its own credential.
+  - tool: get_brand
+    category: brand-data
+    rest: [getBrandData, getBrandDataByDomain, getBrandDataByTicker, getBrandDataByIsin, getBrandDataByCrypto]
+    binding: rest
+    confidence: high
+    note: >-
+      One tool fans out to five REST operations. The tool accepts domain, ticker, ISIN
+      or crypto symbol, which maps to the explicit type routes; getBrandData is the
+      legacy auto-detect route covering all four.
+  - tool: get_brand_context
+    category: agent-context
+    rest: [getBrandContext]
+    binding: rest
+    confidence: high
+    note: 'GET /v2/context/{domain}; supports Accept: text/markdown and a cachedOnly flag that can return 204.'
+  - tool: enrich_transaction
+    category: enrichment
+    rest: [getBrandFromTransaction]
+    binding: rest
+    confidence: high
+    note: >-
+      POST /v2/brands/transaction with {transactionLabel, countryCode}. Enterprise-gated
+      on the REST side per the Transaction API docs.
+  - tool: build_logo_urls
+    category: asset-delivery
+    rest: []
+    binding: client-side
+    confidence: high
+    note: >-
+      Pure URL construction against the Logo CDN (cdn.brandfetch.io) — it makes no API
+      call and has no operationId. The Logo API is a CDN URL contract, not a REST
+      resource, and is deliberately absent from the OpenAPI.
+  - tool: get_asset_base64
+    category: asset-delivery
+    rest: []
+    binding: cdn-proxy
+    confidence: high
+    note: >-
+      Proxies a cdn.brandfetch.io asset back through the MCP transport as base64. No
+      REST operation exists; the provider explicitly documents it as a last resort for
+      sandboxes that cannot reach the CDN.
+mcp_only:
+  - tool: build_logo_urls
+    reason: 'Logo CDN URL builder — the Logo API is a CDN URL scheme with no REST/OpenAPI representation.'
+  - tool: get_asset_base64
+    reason: 'CDN byte proxy for sandboxed agents — no public REST equivalent.'
+  - tool: send_feedback
+    reason: 'MCP-server telemetry channel back to the Brandfetch team; not part of any published API.'
+rest_only:
+  - operations: [getViewer]
+    capability: credential-introspection
+    reason: >-
+      GET /v2/viewer verifies which API key or user session a request is authenticated as.
+      No MCP tool exposes it — the MCP server holds the credential itself, so the agent
+      never needs to inspect it.
+graphql_only:
+  - capability: account-and-quota-plane
+    types: [Viewer, Organization, User, ApiKey, ApiClient, Quotas, QuotaUsage, ApiCredits, BillingSubscription, BillingPlan]
+    reason: 'Dashboard/account management. No REST or MCP equivalent is published.'
+  - capability: webhook-management
+    types: [Webhook, WebhookDelivery, WebhookPayload, SubscribableEvent, CreateWebhookInput, UpdateWebhookInput]
+    reason: >-
+      Webhook registration, delivery history and event subscription are GraphQL-only.
+      The webhook CATALOG is documented (asyncapi/brand-api-webhooks.yml) but there is no
+      REST management API for it.
+  - capability: brand-monitoring
+    types: [Radar, RadarHit, Tracker, TrackerHit, TrackerImageHit, TrackerTextHit, BrandPoliceQuery, BrandPoliceMutation]
+    reason: '"Brand Police" trademark/asset monitoring. Surfaced nowhere in REST or MCP.'
+  - capability: usage-logs
+    types: [ApiRequestLog, LogoCdnRequestLog, ApiRequestLogFilter, LogoCdnRequestLogFilter]
+    reason: 'Per-request usage logs for the REST API and the Logo CDN; no REST equivalent.'
+  - capability: taxonomy-and-geo
+    types: [Taxonomy, TaxonomyNode, Industry, Country, City, GeographicRegion, GeographicAdministrativeDivision]
+    reason: 'Reference/taxonomy graph exposed only through GraphQL; REST returns industry as an inline object.'
+coverage:
+  tools_named: 7
+  tools_bound_to_rest: 4
+  mcp_only: 3
+  rest_operations_total: 9
+  rest_operations_with_a_tool: 8
+  rest_only: 1
+  graphql_types: 161
+  graphql_capabilities_without_rest_or_mcp: 5

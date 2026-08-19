@@ -1,0 +1,310 @@
+{
+  "item": [
+    {
+      "id": "32f6760f-5540-4553-aae6-cbf10987047c",
+      "name": "Brands",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "feb5128b-d4b3-4813-820d-ce374720d8f0",
+          "name": "Retrieve brand data by domain or ID",
+          "request": {
+            "name": "Retrieve brand data by domain or ID",
+            "description": {
+              "content": "Fetches data for a brand based on its domain or unique identifier.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "brands",
+                ":domainOrId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "domainOrId",
+                  "description": "(Required) The domain or unique identifier of the brand"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "2d5ca1fa-7ad1-4650-b463-56b4a1edcef4",
+              "name": "Successfully retrieved brand data",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "brands",
+                    ":domainOrId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "domainOrId",
+                      "description": "(Required) The domain or unique identifier of the brand"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) Bearer authentication header of the form `Bearer <token>`.",
+                    "key": "Authorization",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"string\",\n  \"name\": \"string\",\n  \"domain\": \"string\",\n  \"claimed\": false,\n  \"description\": \"string\",\n  \"longDescription\": \"string\",\n  \"links\": [\n    {\n      \"name\": \"string\",\n      \"url\": \"string\"\n    },\n    {\n      \"name\": \"string\",\n      \"url\": \"string\"\n    }\n  ],\n  \"logos\": [\n    {\n      \"theme\": \"string\",\n      \"formats\": [\n        {\n          \"src\": \"string\",\n          \"format\": \"string\",\n          \"height\": 7817,\n          \"width\": 9441,\n          \"size\": 8557,\n          \"background\": \"string\"\n        },\n        {\n          \"src\": \"string\",\n          \"format\": \"string\",\n          \"height\": 991,\n          \"width\": 8385,\n          \"size\": 3130,\n          \"background\": \"string\"\n        }\n      ]\n    },\n    {\n      \"theme\": \"string\",\n      \"formats\": [\n        {\n          \"src\": \"string\",\n          \"format\": \"string\",\n          \"height\": 7668,\n          \"width\": 5120,\n          \"size\": 4027,\n          \"background\": \"string\"\n        },\n        {\n          \"src\": \"string\",\n          \"format\": \"string\",\n          \"height\": 1052,\n          \"width\": 5076,\n          \"size\": 8793,\n          \"background\": \"string\"\n        }\n      ]\n    }\n  ],\n  \"colors\": [\n    {\n      \"hex\": \"string\",\n      \"type\": \"string\",\n      \"brightness\": 8517\n    },\n    {\n      \"hex\": \"string\",\n      \"type\": \"string\",\n      \"brightness\": 7842\n    }\n  ],\n  \"fonts\": [\n    {\n      \"name\": \"string\",\n      \"type\": \"string\",\n      \"origin\": \"string\",\n      \"originId\": \"string\"\n    },\n    {\n      \"name\": \"string\",\n      \"type\": \"string\",\n      \"origin\": \"string\",\n      \"originId\": \"string\"\n    }\n  ],\n  \"images\": [\n    {\n      \"formats\": [\n        {\n          \"src\": \"string\",\n          \"format\": \"string\",\n          \"height\": 8402,\n          \"width\": 3986,\n          \"size\": 7237,\n          \"background\": \"string\"\n        },\n        {\n          \"src\": \"string\",\n          \"format\": \"string\",\n          \"height\": 4634,\n          \"width\": 2523,\n          \"size\": 1867,\n          \"background\": \"string\"\n        }\n      ],\n      \"type\": \"string\"\n    },\n    {\n      \"formats\": [\n        {\n          \"src\": \"string\",\n          \"format\": \"string\",\n          \"height\": 4999,\n          \"width\": 3442,\n          \"size\": 7421,\n          \"background\": \"string\"\n        },\n        {\n          \"src\": \"string\",\n          \"format\": \"string\",\n          \"height\": 8237,\n          \"width\": 5577,\n          \"size\": 1563,\n          \"background\": \"string\"\n        }\n      ],\n      \"type\": \"string\"\n    }\n  ],\n  \"qualityScore\": 9868.098397119873,\n  \"company\": {\n    \"employees\": 2199,\n    \"foundedYear\": 3178,\n    \"industries\": [\n      {\n        \"id\": \"string\",\n        \"score\": 3949,\n        \"slug\": \"string\",\n        \"name\": \"string\",\n        \"emoji\": \"string\",\n        \"parent\": [\n          {\n            \"id\": \"string\",\n            \"slug\": \"string\",\n            \"name\": \"string\",\n            \"emoji\": \"string\"\n          },\n          {\n            \"id\": \"string\",\n            \"slug\": \"string\",\n            \"name\": \"string\",\n            \"emoji\": \"string\"\n          }\n        ]\n      },\n      {\n        \"id\": \"string\",\n        \"score\": 6063,\n        \"slug\": \"string\",\n        \"name\": \"string\",\n        \"emoji\": \"string\",\n        \"parent\": [\n          {\n            \"id\": \"string\",\n            \"slug\": \"string\",\n            \"name\": \"string\",\n            \"emoji\": \"string\"\n          },\n          {\n            \"id\": \"string\",\n            \"slug\": \"string\",\n            \"name\": \"string\",\n            \"emoji\": \"string\"\n          }\n        ]\n      }\n    ],\n    \"kind\": \"string\",\n    \"location\": {\n      \"city\": \"string\",\n      \"country\": \"string\",\n      \"countryCode\": \"string\",\n      \"region\": \"string\",\n      \"state\": \"string\",\n      \"subregion\": \"string\"\n    }\n  },\n  \"isNsfw\": false,\n  \"urn\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "5c5a5d4d-eeac-4e0f-ad32-9e31d01f049a",
+              "name": "Bad request",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "brands",
+                    ":domainOrId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "domainOrId",
+                      "description": "(Required) The domain or unique identifier of the brand"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) Bearer authentication header of the form `Bearer <token>`.",
+                    "key": "Authorization",
+                    "value": "string"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "bcee5331-a989-4519-983c-6de78e6edb3b",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "brands",
+                    ":domainOrId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "domainOrId",
+                      "description": "(Required) The domain or unique identifier of the brand"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) Bearer authentication header of the form `Bearer <token>`.",
+                    "key": "Authorization",
+                    "value": "string"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "4240cd13-1d04-4885-b00b-5c2d67d4c4ad",
+              "name": "Brand not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "brands",
+                    ":domainOrId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "domainOrId",
+                      "description": "(Required) The domain or unique identifier of the brand"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) Bearer authentication header of the form `Bearer <token>`.",
+                    "key": "Authorization",
+                    "value": "string"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "c4469ad5-9215-4e5c-969e-3ecf127360b3",
+              "name": "Rate limit exceeded",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "brands",
+                    ":domainOrId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "domainOrId",
+                      "description": "(Required) The domain or unique identifier of the brand"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) Bearer authentication header of the form `Bearer <token>`.",
+                    "key": "Authorization",
+                    "value": "string"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.brandfetch.io/v2",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "74b315b2-22f3-4477-bab3-f898c9082335",
+    "name": "Brandfetch Brand Brands API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Brand API provides programmatic access to any companys brand assets through a single API call. This includes their latest logos, color schemes, fonts, images, and other firmographic information.",
+      "type": "text/plain"
+    }
+  }
+}

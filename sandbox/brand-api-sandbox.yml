@@ -1,0 +1,69 @@
+generated: '2026-08-14'
+method: searched
+source: https://docs.brandfetch.com/reference/overview
+sources:
+  - https://docs.brandfetch.com/reference/overview
+  - https://docs.brandfetch.com/reference/brand-api-domain
+  - https://docs.brandfetch.com/llms.txt
+  - https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md
+  - https://docs.brandfetch.com/mcp/overview
+test_live_separation: false
+note: >-
+  Brandfetch ships NO sandbox in the payments sense: there is no test mode, no test/live
+  key prefix pair, no fixture or trigger tooling, no test clock, and no magic test
+  identifiers. There is nothing to simulate — the API returns public brand data, so every
+  call is a live call against real data. What it does provide is an interactive console
+  in the docs and a free tier generous enough to develop against. Recorded here so the
+  absence is a measured fact rather than a gap.
+console:
+  type: interactive-api-reference
+  platform: Mintlify
+  url: https://docs.brandfetch.com/reference/overview
+  try_it: true
+  operations_playable:
+    - https://docs.brandfetch.com/reference/brand-api-domain
+    - https://docs.brandfetch.com/reference/brand-api-ticker
+    - https://docs.brandfetch.com/reference/brand-api-isin
+    - https://docs.brandfetch.com/reference/brand-api-crypto
+    - https://docs.brandfetch.com/reference/brand-api
+    - https://docs.brandfetch.com/reference/brand-context-api
+    - https://docs.brandfetch.com/reference/brand-search-api
+    - https://docs.brandfetch.com/reference/transaction-api
+    - https://docs.brandfetch.com/reference/viewer-api
+  requires_credential: true
+playground:
+  url: https://docs.brandfetch.com/playground
+  advertised_as: 'Explore dataset — Try the Brandfetch APIs interactively in the Playground.'
+  advertised_in: https://docs.brandfetch.com/llms.txt
+  probe: {http_status: 403, note: 'The docs host returns 403 to non-browser clients for this path; the page is listed by the provider''s own llms.txt index, so its existence is provider-asserted rather than independently confirmed.'}
+free_tier_as_sandbox:
+  available: true
+  quota: '100 requests per month'
+  source: https://docs.brandfetch.com/mcp/overview
+  quote: '"sign up for free; the free plan includes 100 requests per month."'
+  note: >-
+    The free developer account is what stands in for a sandbox. Same endpoints, same
+    credentials, real data, metered.
+recommended_test_values:
+  - {value: brandfetch.com, kind: domain,
+     source: 'https://docs.brandfetch.com/.well-known/agent-skills/brandfetch/skill.md',
+     note: 'Brandfetch''s own published Agent Skill checklist says: "Test domain: Verify integration works with brandfetch.com before deploying to production." This is a real domain, not a synthetic fixture.'}
+  - {value: 'STARBUCKS 1523 OMAHA NE + countryCode US', kind: transaction-label,
+     source: 'openapi/brand-api-brandfetch-openapi.yml (requestBody example on getBrandFromTransaction)',
+     note: 'The example transaction descriptor published in the spec; resolves to starbucks.com.'}
+  - {value: 'randomInvalidDomain.com', kind: negative-case,
+     source: 'https://docs.brandfetch.com/changelog/overview',
+     note: 'Used in the provider''s own 404-fallback example to demonstrate fallback/404 on the Logo CDN.'}
+credential_verification:
+  operation: getViewer
+  path: GET /v2/viewer
+  note: >-
+    The nearest thing to a sandbox affordance Brandfetch does ship — a zero-cost call that
+    tells you whether the credential you configured is valid and which kind it is.
+absent:
+  - test-mode keys
+  - test/live key prefixes
+  - magic test identifiers
+  - fixture or trigger tooling
+  - test clocks / time simulation
+  - mock server

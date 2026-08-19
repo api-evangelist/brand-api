@@ -1,0 +1,65 @@
+generated: '2026-08-14'
+method: searched
+source: https://github.com/brandfetch + registry.npmjs.org metadata endpoints
+note: >-
+  Brandfetch publishes no first-party REST client SDK for any mainstream language.
+  What it does ship first-party is an official n8n community node on npm, an official
+  MCP server (source-only, self-hosted via Docker — no npm/PyPI package), and a Sketch
+  plugin. npm, PyPI, RubyGems, crates.io, NuGet, Maven Central and pkg.go.dev were all
+  checked for a `brandfetch` client library and none is published by the vendor; the
+  third-party packages found on npm (`@keystrokehq/brandfetch`, `@krandfetch/brandfetch`,
+  `@pipedream/brandfetch`, `brandfetch-mcp-server` by Eyalm321) are community work and
+  are deliberately NOT listed as official.
+packages:
+  - language: typescript
+    registry: npm
+    name: '@brandfetch/n8n-nodes-brandfetch'
+    url: https://www.npmjs.com/package/@brandfetch/n8n-nodes-brandfetch
+    install: npm install @brandfetch/n8n-nodes-brandfetch
+    repository: https://github.com/Brandfetch/n8n-nodes-brandfetch
+    official: true
+    version: 0.1.7
+    published: '2026-04-21'
+    note: >-
+      Official n8n community node for the Brandfetch API. Read from
+      registry.npmjs.org/@brandfetch/n8n-nodes-brandfetch dist-tags.latest + time.
+  - language: python
+    registry: github
+    name: brandfetch-mcp-server
+    url: https://github.com/Brandfetch/brandfetch-mcp-server
+    install: 'docker build -t brandfetch-mcp-server . && docker run --rm -p 8080:8080 brandfetch-mcp-server'
+    repository: https://github.com/Brandfetch/brandfetch-mcp-server
+    official: true
+    version: v1.2.0
+    published: '2026-08-06'
+    note: >-
+      Official MCP server source (FastMCP, Python 3.11, MIT). Distributed as a GitHub
+      release + Dockerfile only — it is NOT published to PyPI or npm (both checked,
+      404), so there is no registry metadata endpoint; version/date read from the
+      GitHub releases API. Most consumers use the hosted endpoint instead
+      (https://mcp.brandfetch.io/mcp) — see mcp/brand-api-mcp.yml.
+  - language: javascript
+    registry: github
+    name: Brandfetch-Sketch-Plugin
+    url: https://github.com/Brandfetch/Brandfetch-Sketch-Plugin
+    repository: https://github.com/Brandfetch/Brandfetch-Sketch-Plugin
+    official: true
+    version: null
+    published: null
+    note: >-
+      Official Sketch plugin, distributed as a repo download with no tagged release and
+      no registry entry; last pushed 2026-05-08. version/published recorded null because
+      there is nothing published to read, not because it was unchecked. A design-tool
+      plugin, not an API client library.
+registries_checked:
+  - {registry: npm, query: brandfetch, results: 10, first_party_hits: 1}
+  - {registry: pypi, query: 'brandfetch / brandfetch-mcp / brandfetch-mcp-server', results: 0, first_party_hits: 0}
+  - {registry: rubygems, query: brandfetch, results: 0, first_party_hits: 0}
+  - {registry: crates.io, query: brandfetch, results: 0, first_party_hits: 0}
+  - {registry: nuget, query: brandfetch, results: 0, first_party_hits: 0}
+  - {registry: packagist, query: brandfetch, results: 2, first_party_hits: 0,
+     note: 'helgesverre/brandfetch-sdk and milkshakestudio/craft-brandfetch are third-party'}
+  - {registry: pkg.go.dev, query: github.com/brandfetch/brandfetch-go, results: 0, first_party_hits: 0,
+     note: 'proxy.golang.org returned 404 — no module published'}
+  - {registry: maven-central, query: brandfetch, results: null, first_party_hits: 0,
+     note: 'search.maven.org did not return parseable JSON on this pass; no first-party Java SDK is referenced anywhere in the Brandfetch docs either'}

@@ -1,0 +1,43 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Brandfetch Brand Brands API",
+    "version": "2.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Brands",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Retrieve brand data by domain or ID",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.brandfetch.io/v2/brands/:domainOrId",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "domainOrId",
+                "value": "",
+                "type": "path",
+                "description": "The domain or unique identifier of the brand"
+              }
+            ]
+          },
+          "docs": "Fetches data for a brand based on its domain or unique identifier."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
