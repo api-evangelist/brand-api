@@ -105,6 +105,10 @@ apis:
   tags:
   - GraphQL
   - Account Management
+  - Webhook
+  tags_raw:
+  - GraphQL
+  - Account Management
   - Webhooks
   properties:
   - type: GraphQL
