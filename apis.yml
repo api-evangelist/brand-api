@@ -44,39 +44,13 @@ description: >-
   authenticates with Bearer API keys; the Logo and Search APIs use a public,
   embeddable Client ID.
 apis:
-- aid: brand-api:brandfetch-api
-  name: Brandfetch API
-  description: >-
-    The consolidated Brandfetch REST API — nine operations spanning brand lookup by
-    domain, stock/ETF ticker, ISIN and crypto symbol, brand search, LLM-ready brand
-    context, transaction-to-merchant resolution, and credential introspection.
-    Harvested verbatim from the OpenAPI 3.0.1 document Brandfetch publishes at
-    docs.brandfetch.com/openapi.json.
-  humanURL: https://docs.brandfetch.com/reference/overview
-  baseURL: https://api.brandfetch.io
-  tags:
-  - Brands
-  - Brand Context
-  - Brand Search
-  - Merchant Enrichment
-  - Firmographics
-  properties:
-  - type: OpenAPI
-    url: openapi/brand-api-brandfetch-openapi.yml
-  - type: Overlay
-    url: overlays/brand-api-brandfetch-overlay.yaml
-  - type: Documentation
-    url: https://docs.brandfetch.com/delivery-methods/rest-api
-  - type: APIReference
-    url: https://docs.brandfetch.com/reference/overview
 - aid: brand-api:brandfetch-mcp
   name: Brandfetch MCP Server
   description: >-
-    Hosted, remote, streamable-HTTP MCP server exposing seven Brandfetch tools —
-    brand_search, get_brand, get_brand_context, enrich_transaction, build_logo_urls,
-    get_asset_base64 and send_feedback — to any MCP client. Authenticates with OAuth
-    2.1 (authorization_code + PKCE S256) or a bf1. bearer token. MCP requests draw on
-    the caller's Brand API quota.
+    Hosted, remote, streamable-HTTP MCP server exposing seven Brandfetch tools — brand_search, get_brand,
+    get_brand_context, enrich_transaction, build_logo_urls, get_asset_base64 and send_feedback — to any
+    MCP client. Authenticates with OAuth 2.1 (authorization_code + PKCE S256) or a bf1. bearer token.
+    MCP requests draw on the caller's Brand API quota.
   humanURL: https://docs.brandfetch.com/mcp/overview
   baseURL: https://mcp.brandfetch.io/mcp
   tags:
@@ -95,10 +69,9 @@ apis:
 - aid: brand-api:brandfetch-graphql
   name: Brandfetch GraphQL API
   description: >-
-    Enterprise GraphQL endpoint carrying the account plane the REST API does not
-    expose — organizations, API keys, request logs, quotas, billing, webhook
-    registration and delivery history, the industry/geography taxonomy, and the Brand
-    Police trademark-monitoring surface. Anonymous introspection is open and returned
+    Enterprise GraphQL endpoint carrying the account plane the REST API does not expose — organizations,
+    API keys, request logs, quotas, billing, webhook registration and delivery history, the industry/geography
+    taxonomy, and the Brand Police trademark-monitoring surface. Anonymous introspection is open and returned
     the full 161-type schema on 2026-08-14; query execution is Enterprise-gated.
   humanURL: https://docs.brandfetch.com/delivery-methods/graphql
   baseURL: https://graphql.brandfetch.io
@@ -155,9 +128,8 @@ apis:
 - aid: brand-api:brand-api-brands-api
   name: Brand API (Brandfetch) Brands API
   description: >-
-    The Brands API from Brand API (Brandfetch) — the tag-split refinement of the earlier
-    single-operation harvest, superseded by the full nine-operation spec on the
-    Brandfetch API entry above.
+    The Brands API from Brand API (Brandfetch) — the tag-split refinement of the earlier single-operation
+    harvest, superseded by the full nine-operation spec on the Brandfetch API entry above.
   humanURL: https://docs.brandfetch.com/brand-api/overview
   baseURL: https://api.brandfetch.io/v2
   tags:
@@ -167,7 +139,51 @@ apis:
     url: openapi/brand-api-brands-api-openapi.yml
   - type: Documentation
     url: https://docs.brandfetch.com/brand-api/overview
+- aid: brand-api:brand-api-context-api
+  name: Brand API (Brandfetch) Context API
+  description: The context API from Brand API (Brandfetch) — 1 operation(s) for context.
+  humanURL: https://docs.brandfetch.com/reference/overview
+  baseURL: https://api.brandfetch.io
+  tags:
+  - context
+  properties:
+  - type: OpenAPI
+    url: openapi/brand-api-context-api-openapi.yml
+  - type: Documentation
+    url: https://docs.brandfetch.com/delivery-methods/rest-api
+  - type: APIReference
+    url: https://docs.brandfetch.com/reference/overview
+- aid: brand-api:brand-api-search-api
+  name: Brand API (Brandfetch) Search API
+  description: The Search API from Brand API (Brandfetch) — 1 operation(s) for search.
+  humanURL: https://docs.brandfetch.com/reference/overview
+  baseURL: https://api.brandfetch.io
+  tags:
+  - Search
+  properties:
+  - type: OpenAPI
+    url: openapi/brand-api-search-api-openapi.yml
+  - type: Documentation
+    url: https://docs.brandfetch.com/delivery-methods/rest-api
+  - type: APIReference
+    url: https://docs.brandfetch.com/reference/overview
+- aid: brand-api:brand-api-viewer-api
+  name: Brand API (Brandfetch) Viewer API
+  description: The viewer API from Brand API (Brandfetch) — 1 operation(s) for viewer.
+  humanURL: https://docs.brandfetch.com/reference/overview
+  baseURL: https://api.brandfetch.io
+  tags:
+  - viewer
+  properties:
+  - type: OpenAPI
+    url: openapi/brand-api-viewer-api-openapi.yml
+  - type: Documentation
+    url: https://docs.brandfetch.com/delivery-methods/rest-api
+  - type: APIReference
+    url: https://docs.brandfetch.com/reference/overview
 common:
+  - type: Overlay
+    url: overlays/brand-api-brandfetch-overlay.yaml
   - type: Authentication
     url: authentication/brand-api-authentication.yml
   - type: OAuthScopes
