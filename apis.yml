@@ -158,6 +158,8 @@ apis:
   humanURL: https://docs.brandfetch.com/reference/overview
   baseURL: https://api.brandfetch.io
   tags:
+  - Context
+  tags_raw:
   - context
   properties:
   - type: OpenAPI
@@ -186,6 +188,8 @@ apis:
   humanURL: https://docs.brandfetch.com/reference/overview
   baseURL: https://api.brandfetch.io
   tags:
+  - Viewer
+  tags_raw:
   - viewer
   properties:
   - type: OpenAPI
