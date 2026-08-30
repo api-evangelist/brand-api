@@ -1,0 +1,262 @@
+openapi: 3.2.0
+info:
+  title: Brandfetch Context API
+  description: Our APIs help you personalize your customer journey through unique branded experiences.
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+- url: https://api.brandfetch.io
+tags:
+- name: context
+paths:
+  /v2/context/{domain}:
+    get:
+      summary: Get brand context by domain
+      description: Get a structured, narrative-rich brand context for a domain — including identity, positioning, voice, and visual style.
+      operationId: getBrandContext
+      tags:
+      - context
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: domain
+        in: path
+        description: Domain name (e.g., `brandfetch.com`)
+        required: true
+        schema:
+          type: string
+        examples:
+          domain:
+            summary: Domain
+            value: brandfetch.com
+      - name: cachedOnly
+        in: query
+        description: When `true`, return a brand context only if one is already cached, responding instantly without crawling the domain. If no cached context exists, the API responds with `204 No Content` instead of resolving the domain live (which can take several seconds). Useful for latency-sensitive use cases. Any value other than `true` (including omitting the parameter) keeps the default behaviour of resolving the domain live on a cache miss. Defaults to `false`.
+        required: false
+        schema:
+          type: boolean
+          default: false
+        examples:
+          cachedOnly:
+            summary: Cached only (skip crawling)
+            value: true
+      responses:
+        '200':
+          description: 'Successful request. The response format is determined by the `Accept` header: `application/json` returns a structured JSON object, while `text/markdown` returns the brand context as Markdown.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandContextResponse'
+            text/markdown:
+              schema:
+                type: string
+                description: The brand context rendered as Markdown.
+        '204':
+          description: Returned when `cachedOnly=true` and no brand context is currently cached for the domain. The response body is empty. Because crawling is disabled there is nothing to return. Retry without `cachedOnly` to resolve the domain live.
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '404':
+          description: Returned when the brand context could not be resolved. This may mean the domain was not found or is invalid, or that we were unable to crawl the domain (e.g. due to DNS resolution issues, anti-botting protections, or because the request could not be processed in the allotted time).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - <Not Found> or <Invalid Domain Name>
+        '429':
+          description: API key quota exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - API key quota exceeded
+components:
+  schemas:
+    BrandContextStyle:
+      type: object
+      description: The brand's visual style.
+      properties:
+        summary:
+          type:
+          - string
+          - 'null'
+          description: A narrative summary of the brand's visual identity.
+        attributes:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Short adjectives describing the visual style (e.g., `minimal`, `high-contrast`).
+    BrandContextResponse:
+      type: object
+      description: 'Full brand context returned by the Brand Context API. Note: unlike other endpoints in this API which use camelCase, the Brand Context endpoint intentionally returns field names in `snake_case` (e.g., `canonical_name`, `resolved_at`, `value_proposition`, `target_audience`, `products_and_services`) to align with conventions commonly used by LLM tooling that consumes this data.'
+      properties:
+        meta:
+          $ref: '#/components/schemas/BrandContextMeta'
+        identity:
+          $ref: '#/components/schemas/BrandContextIdentity'
+        positioning:
+          $ref: '#/components/schemas/BrandContextPositioning'
+        brand:
+          $ref: '#/components/schemas/BrandContextBrand'
+    BrandContextPositioning:
+      type: object
+      description: How the brand positions itself in the market.
+      properties:
+        value_proposition:
+          type:
+          - string
+          - 'null'
+          description: The brand's value proposition.
+        target_audience:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/BrandContextTargetAudience'
+          description: Target audience segments for the brand.
+        products_and_services:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/BrandContextProductOrService'
+          description: Products and services offered by the brand.
+    BrandContextTargetAudience:
+      type: object
+      description: A single target audience segment for the brand.
+      properties:
+        segment:
+          type: string
+          description: Short label describing the audience segment.
+        description:
+          type: string
+          description: What this segment needs from the brand and how the brand serves them.
+    BrandContextBrand:
+      type: object
+      description: The brand's voice and visual style.
+      properties:
+        voice:
+          $ref: '#/components/schemas/BrandContextVoice'
+        style:
+          $ref: '#/components/schemas/BrandContextStyle'
+    BrandContextProductOrService:
+      type: object
+      description: A product or service offered by the brand.
+      properties:
+        name:
+          type: string
+          description: Name of the product or service.
+        type:
+          type: string
+          description: Whether the offering is a `product` or a `service`.
+          enum:
+          - product
+          - service
+          example: product
+        description:
+          type: string
+          description: Description of the product or service.
+    BrandContextVoice:
+      type: object
+      description: The brand's voice — how it communicates.
+      properties:
+        summary:
+          type:
+          - string
+          - 'null'
+          description: A narrative summary of the brand's voice.
+        attributes:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Short adjectives describing the voice (e.g., `confident`, `reassuring`).
+        avoid:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Things the brand should avoid in its voice.
+    BrandContextMeta:
+      type: object
+      description: Metadata about the resolved brand context.
+      required:
+      - domain
+      - canonical_name
+      - resolved_at
+      properties:
+        domain:
+          type: string
+          description: The resolved domain name.
+          example: brandfetch.com
+        canonical_name:
+          type: string
+          description: The canonical brand name.
+          example: Brandfetch
+        resolved_at:
+          type: string
+          format: date-time
+          description: Timestamp (ISO 8601) at which the context was resolved.
+          example: '2026-05-25T08:48:36.843440+00:00'
+    BrandContextIdentity:
+      type: object
+      description: Core identity of the brand.
+      properties:
+        tagline:
+          type:
+          - string
+          - 'null'
+          description: A short tagline summarizing the brand.
+        mission:
+          type:
+          - string
+          - 'null'
+          description: The brand's mission statement.
+        description:
+          type:
+          - string
+          - 'null'
+          description: A descriptive paragraph about the brand, its products, and how it differentiates.
+        tags:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: A list of tags that characterize the brand.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

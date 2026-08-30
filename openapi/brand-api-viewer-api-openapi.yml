@@ -1,0 +1,185 @@
+openapi: 3.2.0
+info:
+  title: Brandfetch Viewer API
+  description: Our APIs help you personalize your customer journey through unique branded experiences.
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+- url: https://api.brandfetch.io
+tags:
+- name: viewer
+paths:
+  /v2/viewer:
+    get:
+      summary: Get the authenticated viewer
+      description: 'Returns the identity of the credential used to authenticate the request: an API key or a user session token (JWT). Use it to verify a credential during integration setup (a `200` response means the credential is valid; `401`/`403` means it is missing, unknown, or revoked) and to display which API key and organization are connected. Requests to this endpoint are free: they never consume API credits.'
+      operationId: getViewer
+      tags:
+      - viewer
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: The presented credential is valid. The `type` property indicates which kind of credential authenticated the request and determines the response shape.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ViewerApiKeyResponse'
+                - $ref: '#/components/schemas/ViewerUserResponse'
+                discriminator:
+                  propertyName: type
+                  mapping:
+                    api-key: '#/components/schemas/ViewerApiKeyResponse'
+                    user: '#/components/schemas/ViewerUserResponse'
+              examples:
+                apiKey:
+                  summary: Authenticated with an API key
+                  value:
+                    type: api-key
+                    id: id5ZQvmz9A
+                    urn: urn:brandfetch:organization:cl5s9fps1275071ol9h7gs072m:api-key:id5ZQvmz9A
+                    name: Production key
+                    createdAt: '2026-05-12T09:14:07.000Z'
+                    usage:
+                      used: 1234
+                      quota: 250000
+                    organization:
+                      id: cl5s9fps1275071ol9h7gs072m
+                      urn: urn:brandfetch:organization:cl5s9fps1275071ol9h7gs072m
+                      name: Acme Inc.
+                user:
+                  summary: Authenticated with a user session token
+                  value:
+                    type: user
+                    id: cl2xkl6h90007w135197r5abc
+                    urn: urn:brandfetch:user:cl2xkl6h90007w135197r5abc
+                    name: Jane Doe
+                    email: jane@acme.com
+                    createdAt: '2025-11-02T16:41:12.000Z'
+        '401':
+          description: Unauthorized. The Authorization header is missing or the credential could not be resolved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - Unauthorized
+        '403':
+          description: Forbidden. The credential was rejected, e.g. a revoked API key or an expired session token.
+components:
+  schemas:
+    ViewerUserResponse:
+      type: object
+      title: User
+      description: The authenticated user (dashboard session token).
+      required:
+      - type
+      - id
+      - urn
+      - name
+      - email
+      - createdAt
+      properties:
+        type:
+          type: string
+          enum:
+          - user
+          description: The kind of credential that authenticated the request.
+        id:
+          type: string
+          description: Id of the user.
+        urn:
+          type: string
+          description: URN of the user, e.g. `urn:brandfetch:user:{id}`.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Full name of the user.
+        email:
+          type:
+          - string
+          - 'null'
+          description: Email address of the user.
+        createdAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the user account was created.
+    ViewerApiKeyResponse:
+      type: object
+      title: API key
+      description: The authenticated API key.
+      required:
+      - type
+      - id
+      - urn
+      - name
+      - createdAt
+      - usage
+      - organization
+      properties:
+        type:
+          type: string
+          enum:
+          - api-key
+          description: The kind of credential that authenticated the request.
+        id:
+          type: string
+          description: Id of the API key.
+        urn:
+          type: string
+          description: URN of the API key, e.g. `urn:brandfetch:organization:{organization.id}:api-key:{id}`.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Display name of the API key, as set in the dashboard.
+        createdAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the API key was created.
+        usage:
+          type: object
+          description: API credit consumption for the current billing period, mirroring the `x-api-key-quota` and `x-api-key-approximate-usage` response headers of billable endpoints. Because this endpoint is free, `used` is the exact count, not approximated one ahead like the header.
+          required:
+          - used
+          - quota
+          properties:
+            used:
+              type: integer
+              description: API credits consumed so far in the current billing period.
+            quota:
+              type: integer
+              description: API credit allowance for the current billing period.
+        organization:
+          type: object
+          description: The organization the API key belongs to.
+          required:
+          - id
+          - urn
+          - name
+          properties:
+            id:
+              type: string
+              description: Id of the organization.
+            urn:
+              type: string
+              description: URN of the organization, e.g. `urn:brandfetch:organization:{id}`.
+            name:
+              type:
+              - string
+              - 'null'
+              description: Display name of the organization.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

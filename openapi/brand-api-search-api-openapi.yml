@@ -1,0 +1,66 @@
+openapi: 3.2.0
+info:
+  title: Brandfetch Search API
+  description: Our APIs help you personalize your customer journey through unique branded experiences.
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+- url: https://api.brandfetch.io
+tags:
+- name: Search
+paths:
+  /v2/search/{name}?c={clientId}:
+    get:
+      summary: Search brands
+      description: Search for brands by name, login to get a clientId
+      operationId: searchBrands
+      parameters:
+      - name: name
+        in: path
+        description: The name of the company you are searching for.
+        required: true
+        schema:
+          type: string
+      - name: c
+        in: query
+        description: A clientId is a unique identifier assigned to your application that allows it to authenticate and interact with our service. [Get your client ID here](https://developers.brandfetch.com)
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns brand data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    icon:
+                      type:
+                      - string
+                      - 'null'
+                      description: Brand icon URL
+                    name:
+                      type:
+                      - string
+                      - 'null'
+                      description: Brand name
+                    domain:
+                      type: string
+                      description: Brand website URL
+                    claimed:
+                      type: boolean
+                      description: Set to true if the owner of the brand claimed its brand profile on [Brandfetch](https://brandfetch.com)
+                    brandId:
+                      type: string
+                      description: Unique identifier for the brand
+      tags:
+      - Search
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
