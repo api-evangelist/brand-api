@@ -199,6 +199,9 @@ apis:
   - type: APIReference
     url: https://docs.brandfetch.com/reference/overview
 common:
+  - type: License
+    name: MIT
+    url: https://github.com/Brandfetch/brandfetch-mcp-server/blob/main/LICENSE
   - type: Overlay
     url: overlays/brand-api-brandfetch-overlay.yaml
   - type: Authentication
