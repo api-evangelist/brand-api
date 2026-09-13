@@ -1,0 +1,218 @@
+{
+  "host": {
+    "documentationUrl": "https://docs.brandfetch.com",
+    "identifier": "https://brandfetch.com",
+    "displayName": "Brandfetch"
+  },
+  "entries": [
+    {
+      "capabilities": [
+        "brand_search",
+        "get_brand",
+        "get_brand_context",
+        "enrich_transaction",
+        "build_logo_urls",
+        "send_feedback"
+      ],
+      "description": "Brandfetch over the Model Context Protocol, for Claude, Cursor, VS Code, Codex, Windsurf and any other MCP client. Streamable HTTP with OAuth; a dashboard-issued bearer token for clients without it.",
+      "representativeQueries": [
+        "connect Claude to Brandfetch brand data",
+        "look up a company's logos and colors from my assistant",
+        "add a brand data MCP server to Cursor",
+        "find the logo and palette for a brand while I work"
+      ],
+      "url": "https://brandfetch.com/.well-known/mcp/server-card.json",
+      "displayName": "Brandfetch MCP Server",
+      "type": "application/mcp-server-card+json",
+      "identifier": "urn:air:brandfetch.com:server:mcp"
+    },
+    {
+      "metadata": {
+        "documentationUrl": "https://docs.brandfetch.com/reference/brand-api",
+        "endpoint": "https://api.brandfetch.io/v2/brands"
+      },
+      "url": "https://docs.brandfetch.com/openapi.json",
+      "type": "application/vnd.oai.openapi+json",
+      "capabilities": [
+        "BrandLookup",
+        "LogoRetrieval",
+        "ColorPalette",
+        "FontLookup",
+        "Firmographics"
+      ],
+      "description": "The full brand profile for any company in one call: logos in every format and theme, color palette, fonts, and firmographics. Looked up by domain, email, stock ticker, ISIN or crypto symbol.",
+      "representativeQueries": [
+        "what are Nike's official brand colors and fonts",
+        "fetch the logo and brand assets for stripe.com",
+        "get a full brand profile for a company domain",
+        "look up brand data by stock ticker"
+      ],
+      "identifier": "urn:air:brandfetch.com:api:brand",
+      "displayName": "Brand API"
+    },
+    {
+      "metadata": {
+        "documentationUrl": "https://docs.brandfetch.com/reference/brand-context-api",
+        "endpoint": "https://api.brandfetch.io/v2/context"
+      },
+      "url": "https://docs.brandfetch.com/openapi.json",
+      "type": "application/vnd.oai.openapi+json",
+      "capabilities": [
+        "BrandContext",
+        "BrandVoice",
+        "Positioning",
+        "AudienceProfile"
+      ],
+      "description": "LLM-ready semantic brand context for a domain: mission, positioning, voice, audience and style. Built for grounding an agent's output in how a brand actually presents itself.",
+      "representativeQueries": [
+        "what is Figma's brand voice and positioning",
+        "get LLM-ready brand context for a domain",
+        "describe a company's target audience and tone of voice",
+        "ground my generated copy in a brand's messaging"
+      ],
+      "identifier": "urn:air:brandfetch.com:api:brand-context",
+      "displayName": "Brand Context API"
+    },
+    {
+      "metadata": {
+        "documentationUrl": "https://docs.brandfetch.com/reference/brand-search-api",
+        "endpoint": "https://api.brandfetch.io/v2/search"
+      },
+      "url": "https://docs.brandfetch.com/openapi.json",
+      "type": "application/vnd.oai.openapi+json",
+      "capabilities": [
+        "BrandSearch",
+        "DomainResolution",
+        "Autocomplete"
+      ],
+      "description": "Resolve a company name to its canonical domain, with ranked suggestions. Free quota, separate from the credit pool, and built for typeahead.",
+      "representativeQueries": [
+        "find the domain for a company called Monzo",
+        "autocomplete brand names as the user types",
+        "resolve a company name to its canonical domain"
+      ],
+      "identifier": "urn:air:brandfetch.com:api:brand-search",
+      "displayName": "Brand Search API"
+    },
+    {
+      "metadata": {
+        "documentationUrl": "https://docs.brandfetch.com/reference/transaction-api",
+        "endpoint": "https://api.brandfetch.io/v2/brands/transaction"
+      },
+      "url": "https://docs.brandfetch.com/openapi.json",
+      "type": "application/vnd.oai.openapi+json",
+      "capabilities": [
+        "MerchantEnrichment",
+        "TransactionMatching"
+      ],
+      "description": "Identify the merchant behind a raw card or bank statement string and return its brand, so a transaction feed can be shown with real names and logos.",
+      "representativeQueries": [
+        "identify the merchant behind SQ *COFFEE BAR 4471",
+        "enrich a bank statement line with a brand and logo",
+        "clean up credit card transaction descriptions"
+      ],
+      "identifier": "urn:air:brandfetch.com:api:transaction",
+      "displayName": "Transaction API"
+    },
+    {
+      "metadata": {
+        "documentationUrl": "https://docs.brandfetch.com/reference/viewer-api",
+        "endpoint": "https://api.brandfetch.io/v2/viewer"
+      },
+      "url": "https://docs.brandfetch.com/openapi.json",
+      "type": "application/vnd.oai.openapi+json",
+      "description": "Introspect the credentials a request is made with: the plan behind them, the quota they draw on, and how much of it is left.",
+      "representativeQueries": [
+        "check which plan and quota my API key has",
+        "how many Brandfetch API credits do I have left",
+        "introspect the credentials I am calling with"
+      ],
+      "capabilities": [
+        "CredentialIntrospection",
+        "QuotaLookup"
+      ],
+      "identifier": "urn:air:brandfetch.com:api:viewer",
+      "displayName": "Viewer API"
+    },
+    {
+      "description": "A free logo CDN for any company: WebP, SVG, PNG and JPEG, in icon, logo and symbol variants, with light and dark theme variants. No credit card, no attribution link.",
+      "representativeQueries": [
+        "get a company logo as an SVG",
+        "show me a dark mode logo for github.com",
+        "build a CDN URL for a brand icon"
+      ],
+      "metadata": {
+        "endpoint": "https://cdn.brandfetch.io"
+      },
+      "url": "https://docs.brandfetch.com/logo-api/overview",
+      "capabilities": [
+        "LogoRetrieval",
+        "LogoUrlBuilder"
+      ],
+      "identifier": "urn:air:brandfetch.com:api:logo",
+      "displayName": "Logo API",
+      "type": "text/html"
+    },
+    {
+      "description": "A skill for agents starting from nothing: pick the right API for the task, get credentials, and make the first call.",
+      "representativeQueries": [
+        "how do I start using the Brandfetch API as an agent",
+        "get Brandfetch credentials and make a first call",
+        "which Brandfetch API should I use to get logos"
+      ],
+      "identifier": "urn:air:brandfetch.com:skill:agent-onboarding",
+      "url": "https://brandfetch.com/agent-onboarding/SKILL.md",
+      "displayName": "Brandfetch agent onboarding",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\""
+    },
+    {
+      "description": "How agents authenticate: which credential each API takes, where to get one, and how the MCP server's OAuth flow works.",
+      "representativeQueries": [
+        "how do I authenticate against the Brandfetch API",
+        "what credential does the Logo API need",
+        "does the Brandfetch MCP server support OAuth"
+      ],
+      "displayName": "Brandfetch agent authentication",
+      "identifier": "urn:air:brandfetch.com:doc:authentication",
+      "url": "https://brandfetch.com/auth.md",
+      "type": "text/markdown"
+    },
+    {
+      "description": "The llms.txt overview of the whole site: what Brandfetch is, every API with its auth and quotas, pricing, and where the docs are.",
+      "representativeQueries": [
+        "what does Brandfetch do",
+        "list the Brandfetch APIs, pricing and quotas",
+        "give me an overview of Brandfetch for an AI agent"
+      ],
+      "displayName": "Brandfetch llms.txt",
+      "url": "https://brandfetch.com/llms.txt",
+      "identifier": "urn:air:brandfetch.com:doc:llms-txt",
+      "type": "text/plain"
+    },
+    {
+      "description": "The RFC 9727 API catalog: every public API as a linkset, each anchored on the URI an agent calls, with its OpenAPI description, reference documentation and status page.",
+      "representativeQueries": [
+        "list every public Brandfetch API endpoint",
+        "find the OpenAPI description for the Brandfetch APIs",
+        "which Brandfetch APIs exist and where are their docs"
+      ],
+      "identifier": "urn:air:brandfetch.com:catalog:api-catalog",
+      "url": "https://brandfetch.com/.well-known/api-catalog",
+      "displayName": "Brandfetch API catalog",
+      "type": "application/linkset+json; profile=\"https://www.rfc-editor.org/info/rfc9727\""
+    },
+    {
+      "description": "The Agent Skills discovery index: every skill Brandfetch publishes, each with the URL of its SKILL.md and a SHA-256 digest to verify the download against.",
+      "representativeQueries": [
+        "what agent skills does brandfetch.com publish",
+        "find a Brandfetch skill I can install",
+        "verify the Brandfetch skill I downloaded is unmodified"
+      ],
+      "url": "https://brandfetch.com/.well-known/agent-skills/index.json",
+      "identifier": "urn:air:brandfetch.com:catalog:agent-skills",
+      "displayName": "Brandfetch Agent Skills index",
+      "type": "application/json; profile=\"https://schemas.agentskills.io/discovery/0.2.0/schema.json\""
+    }
+  ],
+  "specVersion": "1.0"
+}
