@@ -3,6 +3,15 @@ url: https://raw.githubusercontent.com/api-evangelist/brand-api/refs/heads/main/
 name: Brand API (Brandfetch)
 tags:
   - Brands
+  - Logo
+  - Brand Assets
+  - Company Data
+  - Firmographics
+  - Brand Context
+  - Merchant Enrichment
+  - Agent Tools
+tags_raw:
+  - Brands
   - Logos
   - Brand Assets
   - Company Data
@@ -104,6 +113,10 @@ apis:
 - aid: brand-api:brandfetch-logo-link-api
   name: Brandfetch Logo Link API
   tags:
+  - Logo
+  - CDN
+  - Brand Assets
+  tags_raw:
   - Logos
   - CDN
   - Brand Assets
