@@ -100,6 +100,16 @@ paths:
                     - API key quota exceeded
 components:
   schemas:
+    BrandContextTargetAudience:
+      type: object
+      description: A single target audience segment for the brand.
+      properties:
+        segment:
+          type: string
+          description: Short label describing the audience segment.
+        description:
+          type: string
+          description: What this segment needs from the brand and how the brand serves them.
     BrandContextResponse:
       type: object
       description: 'Full brand context returned by the Brand Context API. Note: unlike other endpoints in this API which use camelCase, the Brand Context endpoint intentionally returns field names in `snake_case` (e.g., `canonical_name`, `resolved_at`, `value_proposition`, `target_audience`, `products_and_services`) to align with conventions commonly used by LLM tooling that consumes this data.'
@@ -112,29 +122,32 @@ components:
           $ref: '#/components/schemas/BrandContextPositioning'
         brand:
           $ref: '#/components/schemas/BrandContextBrand'
-    BrandContextVoice:
+    BrandContextIdentity:
       type: object
-      description: The brand's voice — how it communicates.
+      description: Core identity of the brand.
       properties:
-        summary:
+        tagline:
           type:
           - string
           - 'null'
-          description: A narrative summary of the brand's voice.
-        attributes:
+          description: A short tagline summarizing the brand.
+        mission:
+          type:
+          - string
+          - 'null'
+          description: The brand's mission statement.
+        description:
+          type:
+          - string
+          - 'null'
+          description: A descriptive paragraph about the brand, its products, and how it differentiates.
+        tags:
           type:
           - array
           - 'null'
           items:
             type: string
-          description: Short adjectives describing the voice (e.g., `confident`, `reassuring`).
-        avoid:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Things the brand should avoid in its voice.
+          description: A list of tags that characterize the brand.
     BrandContextProductOrService:
       type: object
       description: A product or service offered by the brand.
@@ -175,6 +188,22 @@ components:
           items:
             $ref: '#/components/schemas/BrandContextProductOrService'
           description: Products and services offered by the brand.
+    BrandContextStyle:
+      type: object
+      description: The brand's visual style.
+      properties:
+        summary:
+          type:
+          - string
+          - 'null'
+          description: A narrative summary of the brand's visual identity.
+        attributes:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Short adjectives describing the visual style (e.g., `minimal`, `high-contrast`).
     BrandContextMeta:
       type: object
       description: Metadata about the resolved brand context.
@@ -196,58 +225,29 @@ components:
           format: date-time
           description: Timestamp (ISO 8601) at which the context was resolved.
           example: '2026-05-25T08:48:36.843440+00:00'
-    BrandContextIdentity:
+    BrandContextVoice:
       type: object
-      description: Core identity of the brand.
-      properties:
-        tagline:
-          type:
-          - string
-          - 'null'
-          description: A short tagline summarizing the brand.
-        mission:
-          type:
-          - string
-          - 'null'
-          description: The brand's mission statement.
-        description:
-          type:
-          - string
-          - 'null'
-          description: A descriptive paragraph about the brand, its products, and how it differentiates.
-        tags:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: A list of tags that characterize the brand.
-    BrandContextTargetAudience:
-      type: object
-      description: A single target audience segment for the brand.
-      properties:
-        segment:
-          type: string
-          description: Short label describing the audience segment.
-        description:
-          type: string
-          description: What this segment needs from the brand and how the brand serves them.
-    BrandContextStyle:
-      type: object
-      description: The brand's visual style.
+      description: The brand's voice — how it communicates.
       properties:
         summary:
           type:
           - string
           - 'null'
-          description: A narrative summary of the brand's visual identity.
+          description: A narrative summary of the brand's voice.
         attributes:
           type:
           - array
           - 'null'
           items:
             type: string
-          description: Short adjectives describing the visual style (e.g., `minimal`, `high-contrast`).
+          description: Short adjectives describing the voice (e.g., `confident`, `reassuring`).
+        avoid:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Things the brand should avoid in its voice.
     BrandContextBrand:
       type: object
       description: The brand's voice and visual style.

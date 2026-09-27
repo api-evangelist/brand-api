@@ -10,6 +10,7 @@ tags:
   - Brand Context
   - Merchant Enrichment
   - Agent Tools
+  - A2A
 tags_raw:
   - Brands
   - Logos
@@ -19,6 +20,7 @@ tags_raw:
   - Brand Context
   - Merchant Enrichment
   - Agent Tools
+  - A2A
 type: Index
 kind: company
 deliveryModel:
@@ -364,3 +366,10 @@ x-enrichment:
   status: enriched
   artifacts_added: 28
   pass: local-v1
+x-a2a:
+  verified: true
+  probed: '2026-09-26'
+  url: "https://docs.brandfetch.com/.well-known/agent-card.json"
+  grade: "conformant"
+  protocol_version: "0.3"
+  control: 404
