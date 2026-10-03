@@ -775,6 +775,21 @@ paths:
     - url: https://api.brandfetch.io/v2
 components:
   schemas:
+    IndustryParent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the industry
+        slug:
+          type: string
+          description: URL friendly identifier
+        name:
+          type: string
+          description: Name of the industry
+        emoji:
+          type: string
+          description: An emoji for the industry
     Location:
       type: object
       description: Company's headquarter information
@@ -809,44 +824,6 @@ components:
           - string
           - 'null'
           description: Headquarter subregion
-    IndustryParent:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the industry
-        slug:
-          type: string
-          description: URL friendly identifier
-        name:
-          type: string
-          description: Name of the industry
-        emoji:
-          type: string
-          description: An emoji for the industry
-    Industry:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the industry
-        score:
-          type: number
-          format: float
-          description: Score between 0-1 about the confidence in the industry
-        slug:
-          type: string
-          description: URL friendly identifier
-        name:
-          type: string
-          description: Name of the industry
-        emoji:
-          type: string
-          description: An emoji for the industry
-        parent:
-          description: If the object is a sub-category, the parent industry
-          items:
-            $ref: '#/components/schemas/IndustryParent'
     BrandResponse:
       type: object
       properties:
@@ -1146,6 +1123,29 @@ components:
           enum:
           - transparent
           description: Indicates if the file has a transparent background
+    Industry:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the industry
+        score:
+          type: number
+          format: float
+          description: Score between 0-1 about the confidence in the industry
+        slug:
+          type: string
+          description: URL friendly identifier
+        name:
+          type: string
+          description: Name of the industry
+        emoji:
+          type: string
+          description: An emoji for the industry
+        parent:
+          description: If the object is a sub-category, the parent industry
+          items:
+            $ref: '#/components/schemas/IndustryParent'
   securitySchemes:
     bearerAuth:
       type: http
