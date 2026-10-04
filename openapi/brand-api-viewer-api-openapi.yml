@@ -73,45 +73,6 @@ paths:
           description: Forbidden. The credential was rejected, e.g. a revoked API key or an expired session token.
 components:
   schemas:
-    ViewerUserResponse:
-      type: object
-      title: User
-      description: The authenticated user (dashboard session token).
-      required:
-      - type
-      - id
-      - urn
-      - name
-      - email
-      - createdAt
-      properties:
-        type:
-          type: string
-          enum:
-          - user
-          description: The kind of credential that authenticated the request.
-        id:
-          type: string
-          description: Id of the user.
-        urn:
-          type: string
-          description: URN of the user, e.g. `urn:brandfetch:user:{id}`.
-        name:
-          type:
-          - string
-          - 'null'
-          description: Full name of the user.
-        email:
-          type:
-          - string
-          - 'null'
-          description: Email address of the user.
-        createdAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: When the user account was created.
     ViewerApiKeyResponse:
       type: object
       title: API key
@@ -179,6 +140,45 @@ components:
               - string
               - 'null'
               description: Display name of the organization.
+    ViewerUserResponse:
+      type: object
+      title: User
+      description: The authenticated user (dashboard session token).
+      required:
+      - type
+      - id
+      - urn
+      - name
+      - email
+      - createdAt
+      properties:
+        type:
+          type: string
+          enum:
+          - user
+          description: The kind of credential that authenticated the request.
+        id:
+          type: string
+          description: Id of the user.
+        urn:
+          type: string
+          description: URN of the user, e.g. `urn:brandfetch:user:{id}`.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Full name of the user.
+        email:
+          type:
+          - string
+          - 'null'
+          description: Email address of the user.
+        createdAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the user account was created.
   securitySchemes:
     bearerAuth:
       type: http

@@ -100,6 +100,50 @@ paths:
                     - API key quota exceeded
 components:
   schemas:
+    BrandContextMeta:
+      type: object
+      description: Metadata about the resolved brand context.
+      required:
+      - domain
+      - canonical_name
+      - resolved_at
+      properties:
+        domain:
+          type: string
+          description: The resolved domain name.
+          example: brandfetch.com
+        canonical_name:
+          type: string
+          description: The canonical brand name.
+          example: Brandfetch
+        resolved_at:
+          type: string
+          format: date-time
+          description: Timestamp (ISO 8601) at which the context was resolved.
+          example: '2026-05-25T08:48:36.843440+00:00'
+    BrandContextPositioning:
+      type: object
+      description: How the brand positions itself in the market.
+      properties:
+        value_proposition:
+          type:
+          - string
+          - 'null'
+          description: The brand's value proposition.
+        target_audience:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/BrandContextTargetAudience'
+          description: Target audience segments for the brand.
+        products_and_services:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/BrandContextProductOrService'
+          description: Products and services offered by the brand.
     BrandContextTargetAudience:
       type: object
       description: A single target audience segment for the brand.
@@ -110,6 +154,18 @@ components:
         description:
           type: string
           description: What this segment needs from the brand and how the brand serves them.
+    BrandContextResponse:
+      type: object
+      description: 'Full brand context returned by the Brand Context API. Note: unlike other endpoints in this API which use camelCase, the Brand Context endpoint intentionally returns field names in `snake_case` (e.g., `canonical_name`, `resolved_at`, `value_proposition`, `target_audience`, `products_and_services`) to align with conventions commonly used by LLM tooling that consumes this data.'
+      properties:
+        meta:
+          $ref: '#/components/schemas/BrandContextMeta'
+        identity:
+          $ref: '#/components/schemas/BrandContextIdentity'
+        positioning:
+          $ref: '#/components/schemas/BrandContextPositioning'
+        brand:
+          $ref: '#/components/schemas/BrandContextBrand'
     BrandContextStyle:
       type: object
       description: The brand's visual style.
@@ -126,6 +182,46 @@ components:
           items:
             type: string
           description: Short adjectives describing the visual style (e.g., `minimal`, `high-contrast`).
+    BrandContextProductOrService:
+      type: object
+      description: A product or service offered by the brand.
+      properties:
+        name:
+          type: string
+          description: Name of the product or service.
+        type:
+          type: string
+          description: Whether the offering is a `product` or a `service`.
+          enum:
+          - product
+          - service
+          example: product
+        description:
+          type: string
+          description: Description of the product or service.
+    BrandContextVoice:
+      type: object
+      description: The brand's voice — how it communicates.
+      properties:
+        summary:
+          type:
+          - string
+          - 'null'
+          description: A narrative summary of the brand's voice.
+        attributes:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Short adjectives describing the voice (e.g., `confident`, `reassuring`).
+        avoid:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Things the brand should avoid in its voice.
     BrandContextIdentity:
       type: object
       description: Core identity of the brand.
@@ -152,79 +248,6 @@ components:
           items:
             type: string
           description: A list of tags that characterize the brand.
-    BrandContextResponse:
-      type: object
-      description: 'Full brand context returned by the Brand Context API. Note: unlike other endpoints in this API which use camelCase, the Brand Context endpoint intentionally returns field names in `snake_case` (e.g., `canonical_name`, `resolved_at`, `value_proposition`, `target_audience`, `products_and_services`) to align with conventions commonly used by LLM tooling that consumes this data.'
-      properties:
-        meta:
-          $ref: '#/components/schemas/BrandContextMeta'
-        identity:
-          $ref: '#/components/schemas/BrandContextIdentity'
-        positioning:
-          $ref: '#/components/schemas/BrandContextPositioning'
-        brand:
-          $ref: '#/components/schemas/BrandContextBrand'
-    BrandContextPositioning:
-      type: object
-      description: How the brand positions itself in the market.
-      properties:
-        value_proposition:
-          type:
-          - string
-          - 'null'
-          description: The brand's value proposition.
-        target_audience:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/BrandContextTargetAudience'
-          description: Target audience segments for the brand.
-        products_and_services:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/BrandContextProductOrService'
-          description: Products and services offered by the brand.
-    BrandContextMeta:
-      type: object
-      description: Metadata about the resolved brand context.
-      required:
-      - domain
-      - canonical_name
-      - resolved_at
-      properties:
-        domain:
-          type: string
-          description: The resolved domain name.
-          example: brandfetch.com
-        canonical_name:
-          type: string
-          description: The canonical brand name.
-          example: Brandfetch
-        resolved_at:
-          type: string
-          format: date-time
-          description: Timestamp (ISO 8601) at which the context was resolved.
-          example: '2026-05-25T08:48:36.843440+00:00'
-    BrandContextProductOrService:
-      type: object
-      description: A product or service offered by the brand.
-      properties:
-        name:
-          type: string
-          description: Name of the product or service.
-        type:
-          type: string
-          description: Whether the offering is a `product` or a `service`.
-          enum:
-          - product
-          - service
-          example: product
-        description:
-          type: string
-          description: Description of the product or service.
     BrandContextBrand:
       type: object
       description: The brand's voice and visual style.
@@ -233,29 +256,6 @@ components:
           $ref: '#/components/schemas/BrandContextVoice'
         style:
           $ref: '#/components/schemas/BrandContextStyle'
-    BrandContextVoice:
-      type: object
-      description: The brand's voice — how it communicates.
-      properties:
-        summary:
-          type:
-          - string
-          - 'null'
-          description: A narrative summary of the brand's voice.
-        attributes:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Short adjectives describing the voice (e.g., `confident`, `reassuring`).
-        avoid:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Things the brand should avoid in its voice.
   securitySchemes:
     bearerAuth:
       type: http
