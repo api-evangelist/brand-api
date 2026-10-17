@@ -775,112 +775,6 @@ paths:
     - url: https://api.brandfetch.io/v2
 components:
   schemas:
-    IndustryParent:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the industry
-        slug:
-          type: string
-          description: URL friendly identifier
-        name:
-          type: string
-          description: Name of the industry
-        emoji:
-          type: string
-          description: An emoji for the industry
-    Industry:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the industry
-        score:
-          type: number
-          format: float
-          description: Score between 0-1 about the confidence in the industry
-        slug:
-          type: string
-          description: URL friendly identifier
-        name:
-          type: string
-          description: Name of the industry
-        emoji:
-          type: string
-          description: An emoji for the industry
-        parent:
-          description: If the object is a sub-category, the parent industry
-          items:
-            $ref: '#/components/schemas/IndustryParent'
-    Format:
-      type: object
-      properties:
-        src:
-          type: string
-          description: File source
-        format:
-          type: string
-          enum:
-          - svg
-          - webp
-          - png
-          - jpeg
-          description: File format
-        height:
-          type:
-          - integer
-          - 'null'
-          description: File height in pixels
-        width:
-          type:
-          - integer
-          - 'null'
-          description: File width in pixels
-        size:
-          type: integer
-          description: File size in bytes
-        background:
-          type:
-          - string
-          - 'null'
-          enum:
-          - transparent
-          description: Indicates if the file has a transparent background
-    Location:
-      type: object
-      description: Company's headquarter information
-      properties:
-        city:
-          type:
-          - string
-          - 'null'
-          description: Headquarter city
-        country:
-          type:
-          - string
-          - 'null'
-          description: Headquarter country
-        countryCode:
-          type:
-          - string
-          - 'null'
-          description: Headquarter country code (ISO 3166-1 alpha-2)
-        region:
-          type:
-          - string
-          - 'null'
-          description: Headquarter region
-        state:
-          type:
-          - string
-          - 'null'
-          description: Headquarter state
-        subregion:
-          type:
-          - string
-          - 'null'
-          description: Headquarter subregion
     BrandResponse:
       type: object
       properties:
@@ -1146,6 +1040,112 @@ components:
         urn:
           type: string
           description: Uniform Resource Name for the brand
+    Format:
+      type: object
+      properties:
+        src:
+          type: string
+          description: File source
+        format:
+          type: string
+          enum:
+          - svg
+          - webp
+          - png
+          - jpeg
+          description: File format
+        height:
+          type:
+          - integer
+          - 'null'
+          description: File height in pixels
+        width:
+          type:
+          - integer
+          - 'null'
+          description: File width in pixels
+        size:
+          type: integer
+          description: File size in bytes
+        background:
+          type:
+          - string
+          - 'null'
+          enum:
+          - transparent
+          description: Indicates if the file has a transparent background
+    Industry:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the industry
+        score:
+          type: number
+          format: float
+          description: Score between 0-1 about the confidence in the industry
+        slug:
+          type: string
+          description: URL friendly identifier
+        name:
+          type: string
+          description: Name of the industry
+        emoji:
+          type: string
+          description: An emoji for the industry
+        parent:
+          description: If the object is a sub-category, the parent industry
+          items:
+            $ref: '#/components/schemas/IndustryParent'
+    IndustryParent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the industry
+        slug:
+          type: string
+          description: URL friendly identifier
+        name:
+          type: string
+          description: Name of the industry
+        emoji:
+          type: string
+          description: An emoji for the industry
+    Location:
+      type: object
+      description: Company's headquarter information
+      properties:
+        city:
+          type:
+          - string
+          - 'null'
+          description: Headquarter city
+        country:
+          type:
+          - string
+          - 'null'
+          description: Headquarter country
+        countryCode:
+          type:
+          - string
+          - 'null'
+          description: Headquarter country code (ISO 3166-1 alpha-2)
+        region:
+          type:
+          - string
+          - 'null'
+          description: Headquarter region
+        state:
+          type:
+          - string
+          - 'null'
+          description: Headquarter state
+        subregion:
+          type:
+          - string
+          - 'null'
+          description: Headquarter subregion
   securitySchemes:
     bearerAuth:
       type: http
