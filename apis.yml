@@ -213,6 +213,16 @@ apis:
     url: https://docs.brandfetch.com/delivery-methods/rest-api
   - type: APIReference
     url: https://docs.brandfetch.com/reference/overview
+- aid: brand-api:brand-api-agents-api
+  name: Brand API (Brandfetch) Agents API
+  description: The agents API from Brand API (Brandfetch) — 1 operation(s) for agents.
+  humanURL: https://docs.brandfetch.com/mcp/overview
+  baseURL: https://mcp.brandfetch.io/mcp
+  tags:
+  - agents
+  properties:
+  - type: OpenAPI
+    url: openapi/brand-api-agents-api-openapi.yml
 common:
   - type: Website
     url: https://www.brandfetch.com/

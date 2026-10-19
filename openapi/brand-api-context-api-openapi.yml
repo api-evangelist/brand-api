@@ -5,6 +5,10 @@ info:
   license:
     name: MIT
   version: 1.0.0
+  contact:
+    name: Brandfetch Support
+    url: https://brandfetch.com
+    email: support@brandfetch.io
 servers:
 - url: https://api.brandfetch.io
 tags:
@@ -13,16 +17,35 @@ paths:
   /v2/context/{domain}:
     get:
       summary: Get brand context by domain
-      description: Get a structured, narrative-rich brand context for a domain — including identity, positioning, voice, and visual style.
+      description: 'Get a structured, narrative-rich brand context for a domain — including identity, positioning, products and services, voice, visual style, and competitors. Authenticate with an API key sent as `Authorization: Bearer `, or pay for the single request with x402 or MPP: https://docs.brandfetch.com/agents/pay-per-request.'
       operationId: getBrandContext
       tags:
       - Context
       security:
       - bearerAuth: []
+      - x402Payment: []
+      - mppPayment: []
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: '0.10'
+        protocols:
+        - x402: {}
+        - mpp:
+            method: tempo
+            intent: charge
+            currency: '0x20C000000000000000000000b9537d11c60E8b50'
+        offers:
+        - amount: '100000'
+          currency: '0x20C000000000000000000000b9537d11c60E8b50'
+          description: Brand Context API request
+          intent: charge
+          method: tempo
       parameters:
       - name: domain
         in: path
-        description: Domain name (e.g., `brandfetch.com`)
+        description: Domain name (`brandfetch.com`), a website URL on the domain (`https://www.brandfetch.com/developers/pricing`), or an email address on the domain (`john@example.brandfetch.com`). The API resolves a website URL or an email address to its registrable domain before the lookup. It does not store the URL or the address. Your request logs show only the domain. A URL whose host is not a domain name returns `400`. A malformed address also returns `400`. The API does not bill these requests.
         required: true
         schema:
           type: string
@@ -30,6 +53,12 @@ paths:
           domain:
             summary: Domain
             value: brandfetch.com
+          email:
+            summary: Email address
+            value: john@example.brandfetch.com
+          url:
+            summary: Website URL
+            value: https://www.brandfetch.com/developers/pricing
       - name: cachedOnly
         in: query
         description: When `true`, return a brand context only if one is already cached, responding instantly without crawling the domain. If no cached context exists, the API responds with `204 No Content` instead of resolving the domain live (which can take several seconds). Useful for latency-sensitive use cases. Any value other than `true` (including omitting the parameter) keeps the default behaviour of resolving the domain live on a cache miss. Defaults to `false`.
@@ -43,7 +72,16 @@ paths:
             value: true
       responses:
         '200':
-          description: 'Successful request. The response format is determined by the `Accept` header: `application/json` returns a structured JSON object, while `text/markdown` returns the brand context as Markdown.'
+          headers:
+            PAYMENT-RESPONSE:
+              description: 'Present on responses paid with x402: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`).'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'Present on responses paid with MPP: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). Such responses also carry `Cache-Control: private`.'
+              schema:
+                type: string
+          description: 'Successful request. The response format is determined by the `Accept` header: `application/json` returns a structured JSON object, while `text/markdown` returns the brand context as Markdown. A request paid with MPP whose response was lost can be retried with the same credential for two minutes: it is served from the payment already taken and not charged again.'
           content:
             application/json:
               schema:
@@ -66,7 +104,7 @@ paths:
                     enum:
                     - Bad Request
         '401':
-          description: Unauthorized
+          description: Unauthorized. Returned when the `Authorization` header is present but malformed. A request with no credential at all receives a `402` with a payment challenge instead.
           content:
             application/json:
               schema:
@@ -76,8 +114,29 @@ paths:
                     type: string
                     enum:
                     - Unauthorized
+        '402':
+          description: 'Payment required. Returned when the request carries no credential: no API key, no x402 payment, no MPP credential. The `PAYMENT-REQUIRED` header prices this request at $0.10 in USDC on Base, and each `WWW-Authenticate: Payment` challenge quotes the same price over MPP. Pay either way, or send an API key. Also returned, with a `reason`, when a `PAYMENT-SIGNATURE` or an `Authorization: Payment …` credential was presented but the payment was not accepted or could not be settled. Nothing is charged in that case. See https://docs.brandfetch.com/agents/pay-per-request.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: 'The x402 v2 payment challenge: base64-encoded JSON whose `accepts` array lists how to pay (scheme `exact`, network `eip155:8453`, the USDC asset, the `amount` in USDC''s six decimals and the receiving `payTo` address). Sign the payment with an x402 client and retry with the result in a `PAYMENT-SIGNATURE` header. See https://docs.brandfetch.com/agents/pay-per-request.'
+              schema:
+                type: string
+            Cache-Control:
+              description: '`no-store` — a challenge is issued for one request and must not be cached.'
+              schema:
+                type: string
+            WWW-Authenticate:
+              description: 'The MPP challenge: one `Payment` challenge for USDC.e on Tempo, which settles from a cent. Answer it with an `Authorization: Payment …` credential. Cards start at $0.50, above this price, so no card challenge is issued here; a card can pay for standing access on `POST /v2/agents/access`.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PaymentChallenge'
+                - $ref: '#/components/schemas/PaymentRejected'
         '404':
-          description: Returned when the brand context could not be resolved. This may mean the domain was not found or is invalid, or that we were unable to crawl the domain (e.g. due to DNS resolution issues, anti-botting protections, or because the request could not be processed in the allotted time).
+          description: Returned when no brand context could be generated for the domain, for example because the domain does not resolve or its site has no usable content. A `404` is not charged.
           content:
             application/json:
               schema:
@@ -87,6 +146,18 @@ paths:
                     type: string
                     enum:
                     - <Not Found> or <Invalid Domain Name>
+        '422':
+          description: The domain's site blocks automated requests, so no brand context can be generated for it. Retrying is unlikely to help. A `422` is not charged.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  message:
+                    type: string
+                    example: We couldn't read this domain (the site appears to block automated requests).
         '429':
           description: API key quota exceeded
           content:
@@ -98,138 +169,100 @@ paths:
                     type: string
                     enum:
                     - API key quota exceeded
+        '503':
+          description: 'The brand context is not ready yet, or the Brand Context API could not answer. The `x-bf-error` header says which, and neither is charged. With `generation_in_progress`, the domain is still being resolved live: retry the request after the number of seconds in `Retry-After`. The retry returns the context once it is ready, or the error if generation failed. With `temporarily_unavailable`, retry shortly. A `503` without an `x-bf-error` header on a paid request comes from the payment service instead: retry after the `Retry-After` interval; after an MPP credential, retry the exact request with the same credential, and a payment that went through is not charged twice. See https://docs.brandfetch.com/agents/pay-per-request.'
+          headers:
+            x-bf-error:
+              description: '`generation_in_progress` when the context is still being generated, `temporarily_unavailable` when the Brand Context API could not answer.'
+              schema:
+                type: string
+                enum:
+                - generation_in_progress
+                - temporarily_unavailable
+            Retry-After:
+              description: The number of seconds to wait before retrying. Present with `generation_in_progress` and on a payment service `503`.
+              schema:
+                type: integer
+                example: 30
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  message:
+                    type: string
+                    example: The brand context for this domain is still being generated. Retry in 30 seconds.
 components:
   schemas:
-    BrandContextStyle:
+    PaymentChallenge:
       type: object
-      description: The brand's visual style.
+      description: 'Body of the 402 an unauthenticated request receives when the route can be paid for per request. The machine-readable challenges are in the `PAYMENT-REQUIRED` header for x402 and the `WWW-Authenticate: Payment` header for MPP; this body says the same in prose.'
       properties:
-        summary:
-          type:
-          - string
-          - 'null'
-          description: A narrative summary of the brand's visual identity.
-        attributes:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Short adjectives describing the visual style (e.g., `minimal`, `high-contrast`).
-    BrandContextProductOrService:
+        message:
+          type: string
+          example: 'Payment required. Either authenticate with a Brandfetch API key (Authorization: Bearer <key>) or pay for this request with x402: sign the payment described in the PAYMENT-REQUIRED header and retry with a PAYMENT-SIGNATURE header.'
+        documentation:
+          type: string
+          example: https://docs.brandfetch.com/agents/pay-per-request
+        pricing:
+          type: object
+          properties:
+            route:
+              type: string
+              example: GET /v2/brands/*
+            price:
+              type: string
+              example: $0.10
+        resource:
+          type: string
+          description: The URL the payment is for.
+          example: https://api.brandfetch.io/v2/brands/nike.com
+        standingAccess:
+          type: string
+          example: For many requests, POST /v2/agents/access (paid the same way) provisions an API key preloaded with prepaid credits.
+    BrandContextCompetitor:
       type: object
-      description: A product or service offered by the brand.
+      description: A company the brand competes with. Every key is present; `name` and `domain` are never `null`.
+      required:
+      - name
+      - domain
+      - type
+      - category
+      - positioning
+      - overlap
       properties:
         name:
           type: string
-          description: Name of the product or service.
-        type:
-          type: string
-          description: Whether the offering is a `product` or a `service`.
-          enum:
-          - product
-          - service
-          example: product
-        description:
-          type: string
-          description: Description of the product or service.
-    BrandContextPositioning:
-      type: object
-      description: How the brand positions itself in the market.
-      properties:
-        value_proposition:
-          type:
-          - string
-          - 'null'
-          description: The brand's value proposition.
-        target_audience:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/BrandContextTargetAudience'
-          description: Target audience segments for the brand.
-        products_and_services:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/BrandContextProductOrService'
-          description: Products and services offered by the brand.
-    BrandContextMeta:
-      type: object
-      description: Metadata about the resolved brand context.
-      required:
-      - domain
-      - canonical_name
-      - resolved_at
-      properties:
+          description: The competitor's name.
         domain:
           type: string
-          description: The resolved domain name.
-          example: brandfetch.com
-        canonical_name:
-          type: string
-          description: The canonical brand name.
-          example: Brandfetch
-        resolved_at:
-          type: string
-          format: date-time
-          description: Timestamp (ISO 8601) at which the context was resolved.
-          example: '2026-05-25T08:48:36.843440+00:00'
-    BrandContextResponse:
-      type: object
-      description: 'Full brand context returned by the Brand Context API. Note: unlike other endpoints in this API which use camelCase, the Brand Context endpoint intentionally returns field names in `snake_case` (e.g., `canonical_name`, `resolved_at`, `value_proposition`, `target_audience`, `products_and_services`) to align with conventions commonly used by LLM tooling that consumes this data.'
-      properties:
-        meta:
-          $ref: '#/components/schemas/BrandContextMeta'
-        identity:
-          $ref: '#/components/schemas/BrandContextIdentity'
-        positioning:
-          $ref: '#/components/schemas/BrandContextPositioning'
-        brand:
-          $ref: '#/components/schemas/BrandContextBrand'
-    BrandContextBrand:
-      type: object
-      description: The brand's voice and visual style.
-      properties:
-        voice:
-          $ref: '#/components/schemas/BrandContextVoice'
-        style:
-          $ref: '#/components/schemas/BrandContextStyle'
-    BrandContextTargetAudience:
-      type: object
-      description: A single target audience segment for the brand.
-      properties:
-        segment:
-          type: string
-          description: Short label describing the audience segment.
-        description:
-          type: string
-          description: What this segment needs from the brand and how the brand serves them.
-    BrandContextVoice:
-      type: object
-      description: The brand's voice — how it communicates.
-      properties:
-        summary:
+          description: The competitor's domain. Pass it to the Brand API for the competitor's logos and colors.
+        type:
           type:
           - string
           - 'null'
-          description: A narrative summary of the brand's voice.
-        attributes:
+          description: '`direct` for a company selling a substitute to the same buyers; `indirect` for one meeting the same need another way.'
+          enum:
+          - direct
+          - indirect
+        category:
           type:
-          - array
+          - string
           - 'null'
+          description: The competitor's category, as a short noun phrase.
+        positioning:
+          type:
+          - string
+          - 'null'
+          description: How the competitor positions itself relative to the brand.
+        overlap:
+          type: array
           items:
             type: string
-          description: Short adjectives describing the voice (e.g., `confident`, `reassuring`).
-        avoid:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Things the brand should avoid in its voice.
+          maxItems: 3
+          description: Where the two compete (e.g., a product line, a buyer segment, a region).
     BrandContextIdentity:
       type: object
       description: Core identity of the brand.
@@ -256,7 +289,289 @@ components:
           items:
             type: string
           description: A list of tags that characterize the brand.
+    BrandContextMeta:
+      type: object
+      description: Metadata about the resolved brand context.
+      required:
+      - domain
+      - canonical_name
+      - resolved_at
+      properties:
+        domain:
+          type: string
+          description: The resolved domain name.
+          example: brandfetch.com
+        canonical_name:
+          type: string
+          description: The canonical brand name.
+          example: Brandfetch
+        resolved_at:
+          type: string
+          format: date-time
+          description: Timestamp (ISO 8601) at which the context was resolved.
+          example: '2026-05-25T08:48:36.843440+00:00'
+    BrandContextCompetition:
+      type:
+      - object
+      - 'null'
+      description: The brand's competitors.
+      required:
+      - competitors
+      properties:
+        competitors:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrandContextCompetitor'
+          maxItems: 5
+          description: Up to five competitors, most direct first. Empty when none can be identified, which is common for small and local businesses.
+    PaymentRejected:
+      type: object
+      description: 'Body of the 402 a request carrying a `PAYMENT-SIGNATURE`, or an `Authorization: Payment …` credential, receives when the payment was not accepted or could not be settled. The resource was not served. Nothing was charged, so pay afresh and retry, unless the `message` says to retry the exact request first (a refused settlement of a standing-access purchase).'
+      properties:
+        message:
+          type: string
+          example: The payment was not accepted, so the request was not served and nothing was charged. Sign a new payment for the PAYMENT-REQUIRED header and retry.
+        reason:
+          type: string
+          description: 'The payment service''s reason code, e.g. `insufficient_funds`. An MPP credential adds `credential_spent` (it already paid for a request), `credential_in_use` (another request is settling it; retry this exact request in a moment) `credential_malformed` (it could not be read) and `challenge_invalid` (it answers a challenge this API did not issue; answer a fresh one). A Tempo transaction that cannot complete adds `nonce_already_used`, `transaction_rejected`, `transaction_reverted` and `transaction_expired`: the transfer did not happen, so answer a fresh challenge.'
+          example: insufficient_funds
+        documentation:
+          type: string
+          example: https://docs.brandfetch.com/agents/pay-per-request
+    BrandContextTargetAudience:
+      type: object
+      description: A single target audience segment for the brand.
+      properties:
+        segment:
+          type: string
+          description: Short label describing the audience segment.
+        description:
+          type: string
+          description: What this segment needs from the brand and how the brand serves them.
+    BrandContextPositioning:
+      type: object
+      description: How the brand positions itself in the market.
+      properties:
+        value_proposition:
+          type:
+          - string
+          - 'null'
+          description: The brand's value proposition.
+        target_audience:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/BrandContextTargetAudience'
+          description: Target audience segments for the brand.
+        products_and_services:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/BrandContextProductOrService'
+          description: Products and services offered by the brand.
+    BrandContextPricing:
+      type:
+      - object
+      - 'null'
+      description: Published pricing for a product or service. Every key is present; each is `null` when the brand's site does not state it.
+      required:
+      - model
+      - free_tier
+      - starting_price
+      - currency
+      - unit
+      - plans
+      - url
+      properties:
+        model:
+          type:
+          - string
+          - 'null'
+          description: 'How the offering is charged, as a lowercase snake_case token. Usually one of `per_seat`, `per_user`, `usage_based`, `subscription`, `one_time`, `freemium`, `commission` or `quote_only`, but it is an open set: other values such as `per_night` or `per_session` occur where the site states them.'
+          example: subscription
+        free_tier:
+          type:
+          - boolean
+          - 'null'
+          description: Whether a free plan or tier is offered.
+        starting_price:
+          type:
+          - number
+          - 'null'
+          description: The lowest published price, in `currency`, for what `unit` describes.
+          example: 99
+        currency:
+          type:
+          - string
+          - 'null'
+          description: ISO 4217 currency code of `starting_price`.
+          example: USD
+        unit:
+          type:
+          - string
+          - 'null'
+          description: What `starting_price` buys, as the site states it (e.g., `per user/month`, `per 1,000 requests`).
+          example: per month
+        plans:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          maxItems: 6
+          description: Names of the published plans or tiers. `null` or an empty array when the site names none.
+        url:
+          type:
+          - string
+          - 'null'
+          description: The pricing page, only when the brand's site links to it.
+    BrandContextResponse:
+      type: object
+      description: 'Full brand context returned by the Brand Context API. Note: unlike other endpoints in this API which use camelCase, the Brand Context endpoint intentionally returns field names in `snake_case` (e.g., `canonical_name`, `resolved_at`, `value_proposition`, `target_audience`, `products_and_services`) to align with conventions commonly used by LLM tooling that consumes this data.'
+      properties:
+        meta:
+          $ref: '#/components/schemas/BrandContextMeta'
+        identity:
+          $ref: '#/components/schemas/BrandContextIdentity'
+        positioning:
+          $ref: '#/components/schemas/BrandContextPositioning'
+        brand:
+          $ref: '#/components/schemas/BrandContextBrand'
+        competition:
+          allOf:
+          - $ref: '#/components/schemas/BrandContextCompetition'
+          description: The brand's competitors. `null` for a context generated before competitors were added to the Brand Context API; such contexts are regenerated over time.
+    BrandContextProductOrService:
+      type: object
+      description: A product or service offered by the brand. Every key is present on every product; the optional fields are `null` when the brand's site does not state them.
+      required:
+      - name
+      - type
+      - description
+      - category
+      - features
+      - tags
+      - url
+      - pricing
+      properties:
+        name:
+          type: string
+          description: Name of the product or service.
+        type:
+          type: string
+          description: Whether the offering is a `product` or a `service`.
+          enum:
+          - product
+          - service
+          example: product
+        description:
+          type: string
+          description: Description of the product or service.
+        category:
+          type:
+          - string
+          - 'null'
+          description: What kind of offering it is, as a short noun phrase (e.g., `CRM`, `running shoe`, `savings account`). `null` when the brand's site does not make it clear.
+          example: Brand data API
+        features:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          maxItems: 5
+          description: Up to five concrete things a customer can do with the offering, each starting with a verb (e.g., `Manage inventory`, `Process accounts payable`), as stated on or supported by the brand's site. `null` or an empty array when the site does not enumerate any; treat both the same way.
+        tags:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          maxItems: 5
+          description: Up to five short keywords for classifying the offering. `null` or an empty array when there are none.
+        url:
+          type:
+          - string
+          - 'null'
+          description: The offering's own page, only when the brand's site links to it.
+          example: https://brandfetch.com/developers
+        pricing:
+          allOf:
+          - $ref: '#/components/schemas/BrandContextPricing'
+          description: Published pricing for the offering. `null` unless the brand publishes prices; never estimated.
+    BrandContextBrand:
+      type: object
+      description: The brand's voice and visual style.
+      properties:
+        voice:
+          $ref: '#/components/schemas/BrandContextVoice'
+        style:
+          $ref: '#/components/schemas/BrandContextStyle'
+    BrandContextVoice:
+      type: object
+      description: The brand's voice — how it communicates.
+      properties:
+        summary:
+          type:
+          - string
+          - 'null'
+          description: A narrative summary of the brand's voice.
+        attributes:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Short adjectives describing the voice (e.g., `confident`, `reassuring`).
+        avoid:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Things the brand should avoid in its voice.
+    BrandContextStyle:
+      type: object
+      description: The brand's visual style.
+      properties:
+        summary:
+          type:
+          - string
+          - 'null'
+          description: A narrative summary of the brand's visual identity.
+        attributes:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Short adjectives describing the visual style (e.g., `minimal`, `high-contrast`).
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
+    clientId:
+      type: apiKey
+      in: query
+      name: c
+      description: Your Brand Search client ID, sent as the `c` query parameter. Get one at https://developers.brandfetch.com.
+    x402Payment:
+      type: apiKey
+      in: header
+      name: PAYMENT-SIGNATURE
+      description: 'An x402 payment for this one request: the signed payment for the challenge a bare request receives in its `PAYMENT-REQUIRED` header. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request.'
+    mppPayment:
+      type: http
+      scheme: Payment
+      description: 'An MPP (Machine Payments Protocol) payment, settled through Stripe: the credential answering one of the `WWW-Authenticate: Payment` challenges a bare request receives. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request#paying-with-mpp.'
+x-service-info:
+  categories:
+  - brand-data
+  - company-data
+  - logos
+  docs:
+    homepage: https://docs.brandfetch.com
+    apiReference: https://docs.brandfetch.com/reference/brand-api
+    llms: https://brandfetch.com/llms.txt

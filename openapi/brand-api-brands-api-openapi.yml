@@ -1,23 +1,47 @@
 openapi: 3.2.0
 info:
-  title: Brands API
-  version: '1.0'
-  description: 'Operations tagged brands across 2 of this provider''s published API definitions: brand-api-brandfetch-openapi.yml, brandfetch-brand-api.yml. Each path carries the servers of the definition it was published in.'
+  title: Brandfetch Brands API
+  description: Our APIs help you personalize your customer journey through unique branded experiences.
+  license:
+    name: MIT
+  version: 1.0.0
+  contact:
+    name: Brandfetch Support
+    url: https://brandfetch.com
+    email: support@brandfetch.io
 servers:
 - url: https://api.brandfetch.io
-- url: https://api.brandfetch.io/v2
 tags:
 - name: Brands
 paths:
   /v2/brands/{identifier}:
     get:
       summary: Get brand data
-      description: Get brand data using a Domain, Brand ID, ISIN, Stock/ETF ticker, or Crypto symbol
+      description: 'Get brand data using a Domain, Website URL, Email address, Brand ID, ISIN, Stock/ETF ticker, or Crypto symbol. Authenticate with an API key sent as `Authorization: Bearer `, or pay for the single request with x402 or MPP: https://docs.brandfetch.com/agents/pay-per-request.'
       operationId: getBrandData
       tags:
       - Brands
       security:
       - bearerAuth: []
+      - x402Payment: []
+      - mppPayment: []
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: '0.10'
+        protocols:
+        - x402: {}
+        - mpp:
+            method: tempo
+            intent: charge
+            currency: '0x20C000000000000000000000b9537d11c60E8b50'
+        offers:
+        - amount: '100000'
+          currency: '0x20C000000000000000000000b9537d11c60E8b50'
+          description: Brand API request
+          intent: charge
+          method: tempo
       parameters:
       - name: identifier
         in: path
@@ -25,6 +49,10 @@ paths:
 
 
           - **Domain:** `nike.com`
+
+          - **Email address:** `john@example.brandfetch.com`
+
+          - **Website URL:** `https://www.brandfetch.com/developers/pricing`
 
           - **Brand ID:** `id_0dwKPKT`
 
@@ -35,7 +63,13 @@ paths:
           - **Crypto symbol:** `BTC`, `ETH`
 
 
-          **Note:** When using this generic endpoint, the identifier is resolved in the following order: `domain` → `ticker` → `isin` → `crypto`. To avoid naming collisions, use explicit type routes: `/v2/brands/{type}/{identifier}` where `type` can be `domain`, `ticker`, `isin`, or `crypto`.'
+          **Note:** When using this generic endpoint, the identifier is resolved in the following order: `domain` → `ticker` → `isin` → `crypto`. To avoid naming collisions, use explicit type routes: `/v2/brands/{type}/{identifier}` where `type` can be `domain`, `ticker`, `isin`, or `crypto`.
+
+
+          **Email addresses:** The API reads an identifier that contains `@` (or the percent-encoded `%40`) as an email address. It resolves the address to its registrable domain. `john@example.brandfetch.com` returns the same response as `brandfetch.com`. A mailbox provider''s address resolves like any other address: a gmail.com address returns the brand of gmail.com. The API does not tell you whether the domain is the contact''s company. A malformed address returns `400`, and the API does not bill the request. Refused lookups do not count against your quota. The API does not store the address. Your request logs show only the resolved domain. This endpoint and the Brand Context API accept email addresses. The explicit type routes refuse an email address with a `400`.
+
+
+          **Website URLs:** The API reads an identifier that starts with `http://` or `https://` (or the percent-encoded `https%3A%2F%2F`) as a website URL. The API also reads a domain with a path (`brandfetch.com/developers/pricing`) as a website URL. The API resolves the URL to the registrable domain of its host. The scheme, `www.`, port, path, and query do not change the result. `https://www.brandfetch.com/developers/pricing` returns the same response as `brandfetch.com`. A URL whose host is not a domain name returns `400`, and the API does not bill the request. Refused lookups do not count against your quota. The API does not store the URL. Your request logs show only the resolved domain. This endpoint and the Brand Context API accept website URLs. The explicit type routes refuse a website URL with a `400`.'
         required: true
         schema:
           type: string
@@ -43,6 +77,12 @@ paths:
           domain:
             summary: Domain
             value: nike.com
+          email:
+            summary: Email address
+            value: john@example.brandfetch.com
+          url:
+            summary: Website URL
+            value: https://www.brandfetch.com/developers/pricing
           brandId:
             summary: Brand ID
             value: id_0dwKPKT
@@ -68,13 +108,44 @@ paths:
           - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
         schema:
           type: boolean
+      - name: cachedOnly
+        in: query
+        description: When `true`, the Brand API answers from its store alone. A brand that is already indexed is returned as usual, and a brand that is not is answered with `204 No Content` instead of being indexed live, which can take several seconds. Nothing is crawled, and a ticker, ISIN, or crypto symbol that is not yet indexed is not resolved either. A `204` does not count towards your quota. Any value other than `true`, including omitting the parameter, keeps the default behaviour of indexing the brand live on a miss. Defaults to `false`.
+        required: false
+        schema:
+          type: boolean
+          default: false
+        examples:
+          cachedOnly:
+            summary: Cached only (skip crawling)
+            value: true
+      - name: palette
+        in: query
+        required: false
+        description: 'Opt in to the brand''s color palette. Set `true` or `1` to add a `palette` object to the response. If you omit the parameter, or set another value, the response does not change and has no `palette` key.
+
+
+          If the brand has no palette yet, this request builds one from the brand''s last crawl and can take some seconds longer.'
+        schema:
+          type: boolean
       responses:
         '200':
-          description: Successful request.
+          headers:
+            PAYMENT-RESPONSE:
+              description: 'Present on responses paid with x402: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`).'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'Present on responses paid with MPP: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). Such responses also carry `Cache-Control: private`.'
+              schema:
+                type: string
+          description: 'Successful request. A request paid with MPP whose response was lost can be retried with the same credential for two minutes: it is served from the payment already taken and not charged again.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrandResponse'
+        '204':
+          description: Returned when `cachedOnly=true` and the brand is not yet indexed. The response body is empty. Because live indexing is disabled there is nothing to return, and the request does not count towards your quota. Retry without `cachedOnly` to index the brand live.
         '400':
           description: Bad Request
           content:
@@ -87,7 +158,7 @@ paths:
                     enum:
                     - Bad Request
         '401':
-          description: Unauthorized
+          description: Unauthorized. Returned when the `Authorization` header is present but malformed. A request with no credential at all receives a `402` with a payment challenge instead.
           content:
             application/json:
               schema:
@@ -97,8 +168,36 @@ paths:
                     type: string
                     enum:
                     - Unauthorized
+        '402':
+          description: 'Payment required. Returned when the request carries no credential: no API key, no x402 payment, no MPP credential. The `PAYMENT-REQUIRED` header prices this request at $0.10 in USDC on Base, and each `WWW-Authenticate: Payment` challenge quotes the same price over MPP. Pay either way, or send an API key. Also returned, with a `reason`, when a `PAYMENT-SIGNATURE` or an `Authorization: Payment …` credential was presented but the payment was not accepted or could not be settled. Nothing is charged in that case. See https://docs.brandfetch.com/agents/pay-per-request.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: 'The x402 v2 payment challenge: base64-encoded JSON whose `accepts` array lists how to pay (scheme `exact`, network `eip155:8453`, the USDC asset, the `amount` in USDC''s six decimals and the receiving `payTo` address). Sign the payment with an x402 client and retry with the result in a `PAYMENT-SIGNATURE` header. See https://docs.brandfetch.com/agents/pay-per-request.'
+              schema:
+                type: string
+            Cache-Control:
+              description: '`no-store` — a challenge is issued for one request and must not be cached.'
+              schema:
+                type: string
+            WWW-Authenticate:
+              description: 'The MPP challenge: one `Payment` challenge for USDC.e on Tempo, which settles from a cent. Answer it with an `Authorization: Payment …` credential. Cards start at $0.50, above this price, so no card challenge is issued here; a card can pay for standing access on `POST /v2/agents/access`.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PaymentChallenge'
+                - $ref: '#/components/schemas/PaymentRejected'
         '404':
-          description: <Not Found> or <Invalid Domain Name>
+          description: '<Not Found> or <Invalid Domain Name>. With `x-bf-error: crawl_queued`, we did not hold the brand yet and have started collecting it: retry the same request in a minute or two; if the brand could be collected, the retry is served it, and otherwise it answers an ordinary `404`, which a payment is charged for. Every `404` consumes an API credit. A payment presented with a `404` is settled, except when the response carries `x-bf-error: crawl_queued`: that payment is not charged, the body carries a `payment` object saying so, and the same payment can be presented again for the retry while it is still valid.'
+          headers:
+            x-bf-error:
+              description: Present when the brand is being collected; a retry shortly after is usually served it.
+              schema:
+                type: string
+                enum:
+                - crawl_queued
           content:
             application/json:
               schema:
@@ -108,6 +207,19 @@ paths:
                     type: string
                     enum:
                     - <Not Found> or <Invalid Domain Name>
+                  payment:
+                    type: object
+                    description: 'Present on a paid request answered with `x-bf-error: crawl_queued`.'
+                    properties:
+                      charged:
+                        type: boolean
+                        enum:
+                        - false
+                      documentation:
+                        type: string
+                        format: uri
+                      message:
+                        type: string
         '429':
           description: API key quota exceeded
           content:
@@ -119,17 +231,112 @@ paths:
                     type: string
                     enum:
                     - API key quota exceeded
-    servers:
-    - url: https://api.brandfetch.io
+    head:
+      summary: Check availability and prefetch a brand
+      description: 'Tells you whether Brandfetch already holds the brand and, when it does not, queues a crawl so that the `GET` which follows is answered from our store instead of waiting on a live crawl. Available on paid plans. A `HEAD` request carries no body and never consumes a credit.
+
+
+        - `200` — the brand is held. A `GET` answers from the store.
+
+        - `202` — the brand is not held and a crawl has been queued. A `GET` made before the crawl finishes still crawls live.
+
+        - `404` — nothing can be fetched for the identifier: an unknown brand ID, ticker, ISIN or crypto symbol, a domain without a public suffix, or a brand that has been removed.
+
+
+        Prefetch requests may be throttled to prevent abuse and ensure quality of service. A typical use is warming a brand at signup: send the new user''s email address, and the brand is ready by the time you render it.'
+      operationId: prefetchBrand
+      tags:
+      - Brands
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: identifier
+        in: path
+        description: 'Same identifier formats as `GET /v2/brands/{identifier}`: domain, email address, brand ID, stock or ETF ticker, ISIN, or crypto symbol. Only a domain — or the registrable domain of an email address — can have a crawl queued for it; the other kinds answer `200` or `404`.'
+        required: true
+        schema:
+          type: string
+        examples:
+          domain:
+            summary: Domain
+            value: nike.com
+      responses:
+        '200':
+          description: The brand is held. A `GET` answers from the store.
+          headers:
+            x-api-key-quota:
+              description: Your organization's API credit quota for the current period. The check itself consumes no credit.
+              schema:
+                type: integer
+            x-api-key-approximate-usage:
+              description: Credits used so far this period. Usage is counted asynchronously, so the figure trails your latest requests slightly.
+              schema:
+                type: integer
+        '202':
+          description: The brand is not held; a crawl has been queued.
+          headers:
+            x-api-key-quota:
+              description: Your organization's API credit quota for the current period. The check itself consumes no credit.
+              schema:
+                type: integer
+            x-api-key-approximate-usage:
+              description: Credits used so far this period. Usage is counted asynchronously, so the figure trails your latest requests slightly.
+              schema:
+                type: integer
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Your organization is not on a paid plan.
+          headers:
+            x-bf-error:
+              description: Why the request was refused.
+              schema:
+                type: string
+                enum:
+                - paid_plan_required
+        '404':
+          description: 'Nothing can be fetched for the identifier: it is unknown, or its brand has been removed.'
+        '429':
+          description: Request throughput limit exceeded. The check never consumes your quota, so this is the platform rate limit rather than your allowance.
+        '503':
+          description: The crawl request could not be queued. Retry later.
+          headers:
+            x-bf-error:
+              description: Why the request was refused.
+              schema:
+                type: string
+                enum:
+                - temporarily_unavailable
   /v2/brands/domain/{domain}:
     get:
       summary: Get brand data by domain
-      description: Get brand data using a domain name
+      description: 'Get brand data using a domain name. Authenticate with an API key sent as `Authorization: Bearer `, or pay for the single request with x402 or MPP: https://docs.brandfetch.com/agents/pay-per-request.'
       operationId: getBrandDataByDomain
       tags:
       - Brands
       security:
       - bearerAuth: []
+      - x402Payment: []
+      - mppPayment: []
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: '0.10'
+        protocols:
+        - x402: {}
+        - mpp:
+            method: tempo
+            intent: charge
+            currency: '0x20C000000000000000000000b9537d11c60E8b50'
+        offers:
+        - amount: '100000'
+          currency: '0x20C000000000000000000000b9537d11c60E8b50'
+          description: Brand API request
+          intent: charge
+          method: tempo
       parameters:
       - name: domain
         in: path
@@ -154,13 +361,44 @@ paths:
           - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
         schema:
           type: boolean
+      - name: cachedOnly
+        in: query
+        description: When `true`, the Brand API answers from its store alone. A brand that is already indexed is returned as usual, and a brand that is not is answered with `204 No Content` instead of being indexed live, which can take several seconds. Nothing is crawled, and a ticker, ISIN, or crypto symbol that is not yet indexed is not resolved either. A `204` does not count towards your quota. Any value other than `true`, including omitting the parameter, keeps the default behaviour of indexing the brand live on a miss. Defaults to `false`.
+        required: false
+        schema:
+          type: boolean
+          default: false
+        examples:
+          cachedOnly:
+            summary: Cached only (skip crawling)
+            value: true
+      - name: palette
+        in: query
+        required: false
+        description: 'Opt in to the brand''s color palette. Set `true` or `1` to add a `palette` object to the response. If you omit the parameter, or set another value, the response does not change and has no `palette` key.
+
+
+          If the brand has no palette yet, this request builds one from the brand''s last crawl and can take some seconds longer.'
+        schema:
+          type: boolean
       responses:
         '200':
-          description: Successful request.
+          headers:
+            PAYMENT-RESPONSE:
+              description: 'Present on responses paid with x402: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`).'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'Present on responses paid with MPP: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). Such responses also carry `Cache-Control: private`.'
+              schema:
+                type: string
+          description: 'Successful request. A request paid with MPP whose response was lost can be retried with the same credential for two minutes: it is served from the payment already taken and not charged again.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrandResponse'
+        '204':
+          description: Returned when `cachedOnly=true` and the brand is not yet indexed. The response body is empty. Because live indexing is disabled there is nothing to return, and the request does not count towards your quota. Retry without `cachedOnly` to index the brand live.
         '400':
           description: Bad Request
           content:
@@ -173,7 +411,7 @@ paths:
                     enum:
                     - Bad Request
         '401':
-          description: Unauthorized
+          description: Unauthorized. Returned when the `Authorization` header is present but malformed. A request with no credential at all receives a `402` with a payment challenge instead.
           content:
             application/json:
               schema:
@@ -183,8 +421,36 @@ paths:
                     type: string
                     enum:
                     - Unauthorized
+        '402':
+          description: 'Payment required. Returned when the request carries no credential: no API key, no x402 payment, no MPP credential. The `PAYMENT-REQUIRED` header prices this request at $0.10 in USDC on Base, and each `WWW-Authenticate: Payment` challenge quotes the same price over MPP. Pay either way, or send an API key. Also returned, with a `reason`, when a `PAYMENT-SIGNATURE` or an `Authorization: Payment …` credential was presented but the payment was not accepted or could not be settled. Nothing is charged in that case. See https://docs.brandfetch.com/agents/pay-per-request.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: 'The x402 v2 payment challenge: base64-encoded JSON whose `accepts` array lists how to pay (scheme `exact`, network `eip155:8453`, the USDC asset, the `amount` in USDC''s six decimals and the receiving `payTo` address). Sign the payment with an x402 client and retry with the result in a `PAYMENT-SIGNATURE` header. See https://docs.brandfetch.com/agents/pay-per-request.'
+              schema:
+                type: string
+            Cache-Control:
+              description: '`no-store` — a challenge is issued for one request and must not be cached.'
+              schema:
+                type: string
+            WWW-Authenticate:
+              description: 'The MPP challenge: one `Payment` challenge for USDC.e on Tempo, which settles from a cent. Answer it with an `Authorization: Payment …` credential. Cards start at $0.50, above this price, so no card challenge is issued here; a card can pay for standing access on `POST /v2/agents/access`.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PaymentChallenge'
+                - $ref: '#/components/schemas/PaymentRejected'
         '404':
-          description: <Not Found> or <Invalid Domain Name>
+          description: '<Not Found> or <Invalid Domain Name>. With `x-bf-error: crawl_queued`, we did not hold the brand yet and have started collecting it: retry the same request in a minute or two; if the brand could be collected, the retry is served it, and otherwise it answers an ordinary `404`, which a payment is charged for. Every `404` consumes an API credit. A payment presented with a `404` is settled, except when the response carries `x-bf-error: crawl_queued`: that payment is not charged, the body carries a `payment` object saying so, and the same payment can be presented again for the retry while it is still valid.'
+          headers:
+            x-bf-error:
+              description: Present when the brand is being collected; a retry shortly after is usually served it.
+              schema:
+                type: string
+                enum:
+                - crawl_queued
           content:
             application/json:
               schema:
@@ -194,6 +460,19 @@ paths:
                     type: string
                     enum:
                     - <Not Found> or <Invalid Domain Name>
+                  payment:
+                    type: object
+                    description: 'Present on a paid request answered with `x-bf-error: crawl_queued`.'
+                    properties:
+                      charged:
+                        type: boolean
+                        enum:
+                        - false
+                      documentation:
+                        type: string
+                        format: uri
+                      message:
+                        type: string
         '429':
           description: API key quota exceeded
           content:
@@ -205,17 +484,112 @@ paths:
                     type: string
                     enum:
                     - API key quota exceeded
-    servers:
-    - url: https://api.brandfetch.io
+    head:
+      summary: Check availability and prefetch a brand
+      description: 'Tells you whether Brandfetch already holds the brand for a domain and, when it does not, queues a crawl so that the `GET` which follows is answered from our store instead of waiting on a live crawl. Available on paid plans. A `HEAD` request carries no body and never consumes a credit.
+
+
+        - `200` — the brand is held. A `GET` answers from the store.
+
+        - `202` — the brand is not held and a crawl has been queued. A `GET` made before the crawl finishes still crawls live.
+
+        - `404` — nothing can be fetched: the domain has no public suffix, or its brand has been removed.
+
+
+        This route accepts a domain only; like the other explicit type routes it refuses an email address with a `400`. Prefetch requests may be throttled to prevent abuse and ensure quality of service.'
+      operationId: prefetchBrandByDomain
+      tags:
+      - Brands
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: domain
+        in: path
+        description: Domain name (e.g., `nike.com`)
+        required: true
+        schema:
+          type: string
+        examples:
+          domain:
+            summary: Domain
+            value: nike.com
+      responses:
+        '200':
+          description: The brand is held. A `GET` answers from the store.
+          headers:
+            x-api-key-quota:
+              description: Your organization's API credit quota for the current period. The check itself consumes no credit.
+              schema:
+                type: integer
+            x-api-key-approximate-usage:
+              description: Credits used so far this period. Usage is counted asynchronously, so the figure trails your latest requests slightly.
+              schema:
+                type: integer
+        '202':
+          description: The brand is not held; a crawl has been queued.
+          headers:
+            x-api-key-quota:
+              description: Your organization's API credit quota for the current period. The check itself consumes no credit.
+              schema:
+                type: integer
+            x-api-key-approximate-usage:
+              description: Credits used so far this period. Usage is counted asynchronously, so the figure trails your latest requests slightly.
+              schema:
+                type: integer
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Your organization is not on a paid plan.
+          headers:
+            x-bf-error:
+              description: Why the request was refused.
+              schema:
+                type: string
+                enum:
+                - paid_plan_required
+        '404':
+          description: 'Nothing can be fetched for the identifier: it is unknown, or its brand has been removed.'
+        '429':
+          description: Request throughput limit exceeded. The check never consumes your quota, so this is the platform rate limit rather than your allowance.
+        '503':
+          description: The crawl request could not be queued. Retry later.
+          headers:
+            x-bf-error:
+              description: Why the request was refused.
+              schema:
+                type: string
+                enum:
+                - temporarily_unavailable
   /v2/brands/ticker/{ticker}:
     get:
       summary: Get brand data by Stock or ETF ticker
-      description: Get brand data using a Stock or ETF ticker
+      description: 'Get brand data using a Stock or ETF ticker. Authenticate with an API key sent as `Authorization: Bearer `, or pay for the single request with x402 or MPP: https://docs.brandfetch.com/agents/pay-per-request.'
       operationId: getBrandDataByTicker
       tags:
       - Brands
       security:
       - bearerAuth: []
+      - x402Payment: []
+      - mppPayment: []
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: '0.10'
+        protocols:
+        - x402: {}
+        - mpp:
+            method: tempo
+            intent: charge
+            currency: '0x20C000000000000000000000b9537d11c60E8b50'
+        offers:
+        - amount: '100000'
+          currency: '0x20C000000000000000000000b9537d11c60E8b50'
+          description: Brand API request
+          intent: charge
+          method: tempo
       parameters:
       - name: ticker
         in: path
@@ -240,13 +614,44 @@ paths:
           - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
         schema:
           type: boolean
+      - name: cachedOnly
+        in: query
+        description: When `true`, the Brand API answers from its store alone. A brand that is already indexed is returned as usual, and a brand that is not is answered with `204 No Content` instead of being indexed live, which can take several seconds. Nothing is crawled, and a ticker, ISIN, or crypto symbol that is not yet indexed is not resolved either. A `204` does not count towards your quota. Any value other than `true`, including omitting the parameter, keeps the default behaviour of indexing the brand live on a miss. Defaults to `false`.
+        required: false
+        schema:
+          type: boolean
+          default: false
+        examples:
+          cachedOnly:
+            summary: Cached only (skip crawling)
+            value: true
+      - name: palette
+        in: query
+        required: false
+        description: 'Opt in to the brand''s color palette. Set `true` or `1` to add a `palette` object to the response. If you omit the parameter, or set another value, the response does not change and has no `palette` key.
+
+
+          If the brand has no palette yet, this request builds one from the brand''s last crawl and can take some seconds longer.'
+        schema:
+          type: boolean
       responses:
         '200':
-          description: Successful request.
+          headers:
+            PAYMENT-RESPONSE:
+              description: 'Present on responses paid with x402: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`).'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'Present on responses paid with MPP: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). Such responses also carry `Cache-Control: private`.'
+              schema:
+                type: string
+          description: 'Successful request. A request paid with MPP whose response was lost can be retried with the same credential for two minutes: it is served from the payment already taken and not charged again.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrandResponse'
+        '204':
+          description: Returned when `cachedOnly=true` and the brand is not yet indexed. The response body is empty. Because live indexing is disabled there is nothing to return, and the request does not count towards your quota. Retry without `cachedOnly` to index the brand live.
         '400':
           description: Bad Request
           content:
@@ -259,7 +664,7 @@ paths:
                     enum:
                     - Bad Request
         '401':
-          description: Unauthorized
+          description: Unauthorized. Returned when the `Authorization` header is present but malformed. A request with no credential at all receives a `402` with a payment challenge instead.
           content:
             application/json:
               schema:
@@ -269,8 +674,36 @@ paths:
                     type: string
                     enum:
                     - Unauthorized
+        '402':
+          description: 'Payment required. Returned when the request carries no credential: no API key, no x402 payment, no MPP credential. The `PAYMENT-REQUIRED` header prices this request at $0.10 in USDC on Base, and each `WWW-Authenticate: Payment` challenge quotes the same price over MPP. Pay either way, or send an API key. Also returned, with a `reason`, when a `PAYMENT-SIGNATURE` or an `Authorization: Payment …` credential was presented but the payment was not accepted or could not be settled. Nothing is charged in that case. See https://docs.brandfetch.com/agents/pay-per-request.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: 'The x402 v2 payment challenge: base64-encoded JSON whose `accepts` array lists how to pay (scheme `exact`, network `eip155:8453`, the USDC asset, the `amount` in USDC''s six decimals and the receiving `payTo` address). Sign the payment with an x402 client and retry with the result in a `PAYMENT-SIGNATURE` header. See https://docs.brandfetch.com/agents/pay-per-request.'
+              schema:
+                type: string
+            Cache-Control:
+              description: '`no-store` — a challenge is issued for one request and must not be cached.'
+              schema:
+                type: string
+            WWW-Authenticate:
+              description: 'The MPP challenge: one `Payment` challenge for USDC.e on Tempo, which settles from a cent. Answer it with an `Authorization: Payment …` credential. Cards start at $0.50, above this price, so no card challenge is issued here; a card can pay for standing access on `POST /v2/agents/access`.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PaymentChallenge'
+                - $ref: '#/components/schemas/PaymentRejected'
         '404':
-          description: <Not Found>
+          description: '<Not Found>. With `x-bf-error: crawl_queued`, we did not hold the brand yet and have started collecting it: retry the same request in a minute or two; if the brand could be collected, the retry is served it, and otherwise it answers an ordinary `404`, which a payment is charged for. Every `404` consumes an API credit. A payment presented with a `404` is settled, except when the response carries `x-bf-error: crawl_queued`: that payment is not charged, the body carries a `payment` object saying so, and the same payment can be presented again for the retry while it is still valid.'
+          headers:
+            x-bf-error:
+              description: Present when the brand is being collected; a retry shortly after is usually served it.
+              schema:
+                type: string
+                enum:
+                - crawl_queued
           content:
             application/json:
               schema:
@@ -280,6 +713,19 @@ paths:
                     type: string
                     enum:
                     - <Not Found>
+                  payment:
+                    type: object
+                    description: 'Present on a paid request answered with `x-bf-error: crawl_queued`.'
+                    properties:
+                      charged:
+                        type: boolean
+                        enum:
+                        - false
+                      documentation:
+                        type: string
+                        format: uri
+                      message:
+                        type: string
         '429':
           description: API key quota exceeded
           content:
@@ -291,17 +737,34 @@ paths:
                     type: string
                     enum:
                     - API key quota exceeded
-    servers:
-    - url: https://api.brandfetch.io
   /v2/brands/isin/{isin}:
     get:
       summary: Get brand data by ISIN
-      description: Get brand data using an ISIN code
+      description: 'Get brand data using an ISIN code. Authenticate with an API key sent as `Authorization: Bearer `, or pay for the single request with x402 or MPP: https://docs.brandfetch.com/agents/pay-per-request.'
       operationId: getBrandDataByIsin
       tags:
       - Brands
       security:
       - bearerAuth: []
+      - x402Payment: []
+      - mppPayment: []
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: '0.10'
+        protocols:
+        - x402: {}
+        - mpp:
+            method: tempo
+            intent: charge
+            currency: '0x20C000000000000000000000b9537d11c60E8b50'
+        offers:
+        - amount: '100000'
+          currency: '0x20C000000000000000000000b9537d11c60E8b50'
+          description: Brand API request
+          intent: charge
+          method: tempo
       parameters:
       - name: isin
         in: path
@@ -326,13 +789,44 @@ paths:
           - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
         schema:
           type: boolean
+      - name: cachedOnly
+        in: query
+        description: When `true`, the Brand API answers from its store alone. A brand that is already indexed is returned as usual, and a brand that is not is answered with `204 No Content` instead of being indexed live, which can take several seconds. Nothing is crawled, and a ticker, ISIN, or crypto symbol that is not yet indexed is not resolved either. A `204` does not count towards your quota. Any value other than `true`, including omitting the parameter, keeps the default behaviour of indexing the brand live on a miss. Defaults to `false`.
+        required: false
+        schema:
+          type: boolean
+          default: false
+        examples:
+          cachedOnly:
+            summary: Cached only (skip crawling)
+            value: true
+      - name: palette
+        in: query
+        required: false
+        description: 'Opt in to the brand''s color palette. Set `true` or `1` to add a `palette` object to the response. If you omit the parameter, or set another value, the response does not change and has no `palette` key.
+
+
+          If the brand has no palette yet, this request builds one from the brand''s last crawl and can take some seconds longer.'
+        schema:
+          type: boolean
       responses:
         '200':
-          description: Successful request.
+          headers:
+            PAYMENT-RESPONSE:
+              description: 'Present on responses paid with x402: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`).'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'Present on responses paid with MPP: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). Such responses also carry `Cache-Control: private`.'
+              schema:
+                type: string
+          description: 'Successful request. A request paid with MPP whose response was lost can be retried with the same credential for two minutes: it is served from the payment already taken and not charged again.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrandResponse'
+        '204':
+          description: Returned when `cachedOnly=true` and the brand is not yet indexed. The response body is empty. Because live indexing is disabled there is nothing to return, and the request does not count towards your quota. Retry without `cachedOnly` to index the brand live.
         '400':
           description: Bad Request
           content:
@@ -345,7 +839,7 @@ paths:
                     enum:
                     - Bad Request
         '401':
-          description: Unauthorized
+          description: Unauthorized. Returned when the `Authorization` header is present but malformed. A request with no credential at all receives a `402` with a payment challenge instead.
           content:
             application/json:
               schema:
@@ -355,8 +849,36 @@ paths:
                     type: string
                     enum:
                     - Unauthorized
+        '402':
+          description: 'Payment required. Returned when the request carries no credential: no API key, no x402 payment, no MPP credential. The `PAYMENT-REQUIRED` header prices this request at $0.10 in USDC on Base, and each `WWW-Authenticate: Payment` challenge quotes the same price over MPP. Pay either way, or send an API key. Also returned, with a `reason`, when a `PAYMENT-SIGNATURE` or an `Authorization: Payment …` credential was presented but the payment was not accepted or could not be settled. Nothing is charged in that case. See https://docs.brandfetch.com/agents/pay-per-request.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: 'The x402 v2 payment challenge: base64-encoded JSON whose `accepts` array lists how to pay (scheme `exact`, network `eip155:8453`, the USDC asset, the `amount` in USDC''s six decimals and the receiving `payTo` address). Sign the payment with an x402 client and retry with the result in a `PAYMENT-SIGNATURE` header. See https://docs.brandfetch.com/agents/pay-per-request.'
+              schema:
+                type: string
+            Cache-Control:
+              description: '`no-store` — a challenge is issued for one request and must not be cached.'
+              schema:
+                type: string
+            WWW-Authenticate:
+              description: 'The MPP challenge: one `Payment` challenge for USDC.e on Tempo, which settles from a cent. Answer it with an `Authorization: Payment …` credential. Cards start at $0.50, above this price, so no card challenge is issued here; a card can pay for standing access on `POST /v2/agents/access`.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PaymentChallenge'
+                - $ref: '#/components/schemas/PaymentRejected'
         '404':
-          description: <Not Found> or <Invalid ISIN>
+          description: '<Not Found> or <Invalid ISIN>. With `x-bf-error: crawl_queued`, we did not hold the brand yet and have started collecting it: retry the same request in a minute or two; if the brand could be collected, the retry is served it, and otherwise it answers an ordinary `404`, which a payment is charged for. Every `404` consumes an API credit. A payment presented with a `404` is settled, except when the response carries `x-bf-error: crawl_queued`: that payment is not charged, the body carries a `payment` object saying so, and the same payment can be presented again for the retry while it is still valid.'
+          headers:
+            x-bf-error:
+              description: Present when the brand is being collected; a retry shortly after is usually served it.
+              schema:
+                type: string
+                enum:
+                - crawl_queued
           content:
             application/json:
               schema:
@@ -366,6 +888,19 @@ paths:
                     type: string
                     enum:
                     - <Not Found> or <Invalid ISIN>
+                  payment:
+                    type: object
+                    description: 'Present on a paid request answered with `x-bf-error: crawl_queued`.'
+                    properties:
+                      charged:
+                        type: boolean
+                        enum:
+                        - false
+                      documentation:
+                        type: string
+                        format: uri
+                      message:
+                        type: string
         '429':
           description: API key quota exceeded
           content:
@@ -377,17 +912,34 @@ paths:
                     type: string
                     enum:
                     - API key quota exceeded
-    servers:
-    - url: https://api.brandfetch.io
   /v2/brands/crypto/{symbol}:
     get:
       summary: Get brand data by crypto symbol
-      description: Get brand data using a crypto symbol
+      description: 'Get brand data using a crypto symbol. Authenticate with an API key sent as `Authorization: Bearer `, or pay for the single request with x402 or MPP: https://docs.brandfetch.com/agents/pay-per-request.'
       operationId: getBrandDataByCrypto
       tags:
       - Brands
       security:
       - bearerAuth: []
+      - x402Payment: []
+      - mppPayment: []
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: '0.10'
+        protocols:
+        - x402: {}
+        - mpp:
+            method: tempo
+            intent: charge
+            currency: '0x20C000000000000000000000b9537d11c60E8b50'
+        offers:
+        - amount: '100000'
+          currency: '0x20C000000000000000000000b9537d11c60E8b50'
+          description: Brand API request
+          intent: charge
+          method: tempo
       parameters:
       - name: symbol
         in: path
@@ -412,13 +964,44 @@ paths:
           - **`false`** — Filters out all brands flagged as NSFW (returns `404`).'
         schema:
           type: boolean
+      - name: cachedOnly
+        in: query
+        description: When `true`, the Brand API answers from its store alone. A brand that is already indexed is returned as usual, and a brand that is not is answered with `204 No Content` instead of being indexed live, which can take several seconds. Nothing is crawled, and a ticker, ISIN, or crypto symbol that is not yet indexed is not resolved either. A `204` does not count towards your quota. Any value other than `true`, including omitting the parameter, keeps the default behaviour of indexing the brand live on a miss. Defaults to `false`.
+        required: false
+        schema:
+          type: boolean
+          default: false
+        examples:
+          cachedOnly:
+            summary: Cached only (skip crawling)
+            value: true
+      - name: palette
+        in: query
+        required: false
+        description: 'Opt in to the brand''s color palette. Set `true` or `1` to add a `palette` object to the response. If you omit the parameter, or set another value, the response does not change and has no `palette` key.
+
+
+          If the brand has no palette yet, this request builds one from the brand''s last crawl and can take some seconds longer.'
+        schema:
+          type: boolean
       responses:
         '200':
-          description: Successful request.
+          headers:
+            PAYMENT-RESPONSE:
+              description: 'Present on responses paid with x402: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`).'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'Present on responses paid with MPP: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). Such responses also carry `Cache-Control: private`.'
+              schema:
+                type: string
+          description: 'Successful request. A request paid with MPP whose response was lost can be retried with the same credential for two minutes: it is served from the payment already taken and not charged again.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrandResponse'
+        '204':
+          description: Returned when `cachedOnly=true` and the brand is not yet indexed. The response body is empty. Because live indexing is disabled there is nothing to return, and the request does not count towards your quota. Retry without `cachedOnly` to index the brand live.
         '400':
           description: Bad Request
           content:
@@ -431,7 +1014,7 @@ paths:
                     enum:
                     - Bad Request
         '401':
-          description: Unauthorized
+          description: Unauthorized. Returned when the `Authorization` header is present but malformed. A request with no credential at all receives a `402` with a payment challenge instead.
           content:
             application/json:
               schema:
@@ -441,6 +1024,27 @@ paths:
                     type: string
                     enum:
                     - Unauthorized
+        '402':
+          description: 'Payment required. Returned when the request carries no credential: no API key, no x402 payment, no MPP credential. The `PAYMENT-REQUIRED` header prices this request at $0.10 in USDC on Base, and each `WWW-Authenticate: Payment` challenge quotes the same price over MPP. Pay either way, or send an API key. Also returned, with a `reason`, when a `PAYMENT-SIGNATURE` or an `Authorization: Payment …` credential was presented but the payment was not accepted or could not be settled. Nothing is charged in that case. See https://docs.brandfetch.com/agents/pay-per-request.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: 'The x402 v2 payment challenge: base64-encoded JSON whose `accepts` array lists how to pay (scheme `exact`, network `eip155:8453`, the USDC asset, the `amount` in USDC''s six decimals and the receiving `payTo` address). Sign the payment with an x402 client and retry with the result in a `PAYMENT-SIGNATURE` header. See https://docs.brandfetch.com/agents/pay-per-request.'
+              schema:
+                type: string
+            Cache-Control:
+              description: '`no-store` — a challenge is issued for one request and must not be cached.'
+              schema:
+                type: string
+            WWW-Authenticate:
+              description: 'The MPP challenge: one `Payment` challenge for USDC.e on Tempo, which settles from a cent. Answer it with an `Authorization: Payment …` credential. Cards start at $0.50, above this price, so no card challenge is issued here; a card can pay for standing access on `POST /v2/agents/access`.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PaymentChallenge'
+                - $ref: '#/components/schemas/PaymentRejected'
         '404':
           description: <Not Found> or <Invalid Crypto Symbol>
           content:
@@ -463,17 +1067,34 @@ paths:
                     type: string
                     enum:
                     - API key quota exceeded
-    servers:
-    - url: https://api.brandfetch.io
   /v2/brands/transaction:
     post:
       summary: Get brand data from a transaction
-      description: Turn payment transactions into merchant data
+      description: 'Turn payment transactions into merchant data. Authenticate with an API key sent as `Authorization: Bearer `, or pay for the single request with x402 or MPP: https://docs.brandfetch.com/agents/pay-per-request.'
       operationId: getBrandFromTransaction
       tags:
       - Brands
       security:
       - bearerAuth: []
+      - x402Payment: []
+      - mppPayment: []
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: '0.10'
+        protocols:
+        - x402: {}
+        - mpp:
+            method: tempo
+            intent: charge
+            currency: '0x20C000000000000000000000b9537d11c60E8b50'
+        offers:
+        - amount: '100000'
+          currency: '0x20C000000000000000000000b9537d11c60E8b50'
+          description: Transaction API request
+          intent: charge
+          method: tempo
       requestBody:
         required: true
         content:
@@ -494,13 +1115,22 @@ paths:
               - countryCode
       responses:
         '200':
-          description: Successful request.
+          headers:
+            PAYMENT-RESPONSE:
+              description: 'Present on responses paid with x402: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`).'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'Present on responses paid with MPP: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). Such responses also carry `Cache-Control: private`.'
+              schema:
+                type: string
+          description: 'Successful request. A request paid with MPP whose response was lost can be retried with the same credential and the same body for two minutes: it is served from the payment already taken and not charged again. The credential pays for that transaction only: presented with another `transactionLabel` or `countryCode`, it is refused with a `402` whose `reason` is `credential_spent`.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrandResponse'
         '400':
-          description: Bad Request
+          description: 'Either the request was malformed, or the descriptor could not be confidently matched to a merchant. A malformed request is a missing or empty `transactionLabel` or `countryCode`, or a `countryCode` that names no country; the message names the offending field. A descriptor that could not be matched carries `reason: low_confidence` and the message `We couldn''t match this transaction to a brand with enough confidence. Retrying won''t change the result; a more complete merchant descriptor may.` A `countryCode` that names no country carries `reason: invalid_country`. Retrying does not change either case, so fall back to showing the raw descriptor. For a temporary failure on our side, which is worth retrying, see `503`. Neither case is charged: it consumes no API credit, and a payment presented with it is not settled. A malformed body is answered `400` whatever credential the request carries, and a request without a credential is quoted a price only once its body is complete.'
           content:
             application/json:
               schema:
@@ -508,10 +1138,16 @@ paths:
                 properties:
                   message:
                     type: string
+                    example: We couldn't match this transaction to a brand with enough confidence. Retrying won't change the result; a more complete merchant descriptor may.
+                  reason:
+                    type: string
                     enum:
-                    - Bad Request
+                    - low_confidence
+                    - invalid_country
+                    description: 'Why the request was refused, when it was not for a missing or empty field: `low_confidence` when the descriptor could not be confidently matched to a merchant, `invalid_country` when `countryCode` names no country.'
+                    example: low_confidence
         '401':
-          description: Unauthorized
+          description: Unauthorized. Returned when the `Authorization` header is present but malformed. A request with no credential at all receives a `402` with a payment challenge instead.
           content:
             application/json:
               schema:
@@ -521,8 +1157,36 @@ paths:
                     type: string
                     enum:
                     - Unauthorized
+        '402':
+          description: 'Payment required. Returned when the request carries no credential: no API key, no x402 payment, no MPP credential. The `PAYMENT-REQUIRED` header prices this request at $0.10 in USDC on Base, and each `WWW-Authenticate: Payment` challenge quotes the same price over MPP. Pay either way, or send an API key. Also returned, with a `reason`, when a `PAYMENT-SIGNATURE` or an `Authorization: Payment …` credential was presented but the payment was not accepted or could not be settled. Nothing is charged in that case. See https://docs.brandfetch.com/agents/pay-per-request.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: 'The x402 v2 payment challenge: base64-encoded JSON whose `accepts` array lists how to pay (scheme `exact`, network `eip155:8453`, the USDC asset, the `amount` in USDC''s six decimals and the receiving `payTo` address). Sign the payment with an x402 client and retry with the result in a `PAYMENT-SIGNATURE` header. See https://docs.brandfetch.com/agents/pay-per-request.'
+              schema:
+                type: string
+            Cache-Control:
+              description: '`no-store` — a challenge is issued for one request and must not be cached.'
+              schema:
+                type: string
+            WWW-Authenticate:
+              description: 'The MPP challenge: one `Payment` challenge for USDC.e on Tempo, which settles from a cent. It is issued for the transaction the request body names, so answer it with an `Authorization: Payment …` credential and send the same body again. Cards start at $0.50, above this price, so no card challenge is issued here; a card can pay for standing access on `POST /v2/agents/access`.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PaymentChallenge'
+                - $ref: '#/components/schemas/PaymentRejected'
         '404':
-          description: Not Found
+          description: 'Not Found. The transaction label was matched to a domain, but there is no brand data to return for it. Like a `200`, it consumes an API credit. A payment presented with it is settled, except when the response carries `x-bf-error: crawl_queued`. That header means we did not hold the brand yet and have started collecting it: retry the same request in a minute or two; if the brand could be collected, the retry is served it, and otherwise it answers an ordinary `404`, which a payment is charged for. A paid request answered this way is not charged, and its body carries a `payment` object saying so; the same payment can be presented again for the retry while it is still valid.'
+          headers:
+            x-bf-error:
+              description: Present when the brand is being collected; a retry shortly after is usually served it.
+              schema:
+                type: string
+                enum:
+                - crawl_queued
           content:
             application/json:
               schema:
@@ -532,6 +1196,19 @@ paths:
                     type: string
                     enum:
                     - Not Found
+                  payment:
+                    type: object
+                    description: 'Present on a paid request answered with `x-bf-error: crawl_queued`.'
+                    properties:
+                      charged:
+                        type: boolean
+                        enum:
+                        - false
+                      documentation:
+                        type: string
+                        format: uri
+                      message:
+                        type: string
         '429':
           description: API key quota exceeded
           content:
@@ -543,238 +1220,336 @@ paths:
                     type: string
                     enum:
                     - API key quota exceeded
-    servers:
-    - url: https://api.brandfetch.io
-  /brands/{domainOrId}:
-    get:
-      summary: Retrieve brand data by domain or ID
-      description: Fetches data for a brand based on its domain or unique identifier.
-      parameters:
-      - name: domainOrId
-        in: path
-        required: true
-        description: The domain or unique identifier of the brand
-        schema:
-          type: string
-      - name: Authorization
-        in: header
-        required: true
-        description: Bearer authentication header of the form `Bearer <token>`.
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Successfully retrieved brand data
+        '503':
+          description: 'Brandfetch was temporarily unable to process the request. The request itself was valid, so retrying it is safe and may succeed. An enrichment `503` never consumes an API credit, and a payment presented with it is not settled. A `503` with `Retry-After` on a paid request comes from the payment service instead: it could not be reached, or, after an MPP credential, whether the payment went through is not known yet. Retry after the interval; after an MPP credential, retry the exact request with the same credential, and a payment that went through is not charged twice. See https://docs.brandfetch.com/agents/pay-per-request. This is distinct from a `400` saying the transaction could not be matched to a brand with enough confidence: retrying that returns the same answer.'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
+                  message:
                     type: string
-                    description: Unique identifier for the brand
-                  name:
-                    type: string
-                    nullable: true
-                    description: Brand name
-                  domain:
-                    type: string
-                    description: Brand website URL
-                  claimed:
-                    type: boolean
-                    description: Indicates if the brand profile is claimed by its owner
-                  description:
-                    type: string
-                    nullable: true
-                    description: Short description of the brand
-                  longDescription:
-                    type: string
-                    nullable: true
-                    description: Long description of the brand
-                  links:
-                    type: array
-                    description: Social media links for the brand
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                          description: Name of the social platform
-                        url:
-                          type: string
-                          description: URL to the brand's social profile
-                  logos:
-                    type: array
-                    description: Logos, symbols & icons of the brand
-                    items:
-                      type: object
-                      properties:
-                        theme:
-                          type: string
-                          description: Theme of the logo, e.g., dark
-                        formats:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              src:
-                                type: string
-                                description: Source URL of the logo
-                              format:
-                                type: string
-                                description: Format of the logo file (e.g., svg)
-                              height:
-                                type: integer
-                              width:
-                                type: integer
-                              size:
-                                type: integer
-                              background:
-                                type: string
-                  colors:
-                    type: array
-                    description: Color palette of the brand
-                    items:
-                      type: object
-                      properties:
-                        hex:
-                          type: string
-                          description: Hex code of the color
-                        type:
-                          type: string
-                          description: Type of color (e.g., accent)
-                        brightness:
-                          type: integer
-                  fonts:
-                    type: array
-                    description: Fonts used by the brand
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                          description: Font name
-                        type:
-                          type: string
-                          description: Font type (e.g., title, body)
-                        origin:
-                          type: string
-                          description: Origin of the font (e.g., google)
-                        originId:
-                          type: string
-                        weights:
-                          type: array
-                          items:
-                            type: object
-                  images:
-                    type: array
-                    description: Banner and other images for the brand
-                    items:
-                      type: object
-                      properties:
-                        formats:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              src:
-                                type: string
-                                description: Source URL of the image
-                              format:
-                                type: string
-                                description: Format of the image file
-                              height:
-                                type: integer
-                              width:
-                                type: integer
-                              size:
-                                type: integer
-                              background:
-                                type: string
-                        tags:
-                          type: array
-                          items:
-                            type: object
-                        type:
-                          type: string
-                  qualityScore:
-                    type: number
-                    description: Quality score for the brand data (0-1)
-                  company:
-                    type: object
-                    description: Firmographic data for the brand's company
-                    properties:
-                      employees:
-                        type: integer
-                      foundedYear:
-                        type: integer
-                      industries:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                            score:
-                              type: integer
-                            slug:
-                              type: string
-                            name:
-                              type: string
-                            emoji:
-                              type: string
-                            parent:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  id:
-                                    type: string
-                                  slug:
-                                    type: string
-                                  name:
-                                    type: string
-                                  emoji:
-                                    type: string
-                      kind:
-                        type: string
-                      location:
-                        type: object
-                        properties:
-                          city:
-                            type: string
-                          country:
-                            type: string
-                          countryCode:
-                            type: string
-                          region:
-                            type: string
-                          state:
-                            type: string
-                          subregion:
-                            type: string
-                  isNsfw:
-                    type: boolean
-                    description: true if the brand is not safe for work
-                  urn:
-                    type: string
-                    description: Uniform Resource Name for the brand
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '404':
-          description: Brand not found
-        '429':
-          description: Rate limit exceeded
+                    enum:
+                    - Transaction enrichment is temporarily unavailable. Please retry.
+  /v2/brands/batch:
+    post:
+      summary: Get up to 100 brands in one request
+      description: 'Send up to 100 identifiers. Get one result per identifier, in the order you sent them. Each identifier is answered the way `GET /v2/brands/{identifier}` answers it.
+
+
+        One difference: a batch never crawls while you wait. A brand that is not indexed yet is queued for indexing and answered `202`. Request it again later.
+
+
+        Each identifier answered `200` uses one API credit. Every other result is free, `404` included. An identifier repeated in one request is charged once.
+
+
+        Available on paid plans and with prepaid credits. Authenticate with an API key sent as `Authorization: Bearer `.'
+      operationId: getBrandBatch
       tags:
       - Brands
-      operationId: getBrandsByDomainOrId
-      x-operation-id-source: derived
-    servers:
-    - url: https://api.brandfetch.io/v2
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - identifiers
+              properties:
+                identifiers:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  description: 'The brands to look up. A string is read as the `identifier` of `GET /v2/brands/{identifier}`: a domain, website URL, email address, brand ID, ticker or ISIN. An object names the identifier''s type, as `GET /v2/brands/{type}/{identifier}` does. An exchange-suffixed ticker sent as a string, such as `bhp.ax`, is read as a domain: send it as `{ "type": "ticker", "value": "BHP.AX" }`.'
+                  items:
+                    oneOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 2048
+                      example: nike.com
+                    - type: object
+                      additionalProperties: false
+                      required:
+                      - type
+                      - value
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - domain
+                          - ticker
+                          - isin
+                          - crypto
+                          - brandId
+                        value:
+                          type: string
+                          minLength: 1
+                          maxLength: 2048
+                      example:
+                        type: ticker
+                        value: NKE
+                  example:
+                  - nike.com
+                  - https://www.spotify.com/about
+                  - type: ticker
+                    value: NKE
+                cachedOnly:
+                  type: boolean
+                  default: false
+                  description: Answer from the index alone. A brand that is not indexed is answered `204` and is not queued, and a ticker, ISIN or crypto symbol that is not indexed is not resolved. A `204` is free.
+                allowNsfw:
+                  type: boolean
+                  description: As `allowNsfw` on `GET /v2/brands/{identifier}`. Not set by default.
+                palette:
+                  type: boolean
+                  default: false
+                  description: 'As `palette` on `GET /v2/brands/{identifier}`: add each brand''s `palette`.'
+      responses:
+        '200':
+          description: One result per identifier, in the order you sent them.
+          headers:
+            x-api-key-quota:
+              description: Your organization's API credit quota for the current period.
+              schema:
+                type: integer
+            x-api-key-approximate-usage:
+              description: Credits used this period, including the ones this request uses. Usage is counted asynchronously, so the figure trails your latest requests slightly.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - identifier
+                      - status
+                      properties:
+                        identifier:
+                          description: The identifier you sent, with surrounding whitespace removed.
+                          oneOf:
+                          - type: string
+                          - type: object
+                        status:
+                          type: integer
+                          enum:
+                          - 200
+                          - 202
+                          - 204
+                          - 400
+                          - 404
+                          - 413
+                          - 500
+                          - 504
+                          description: '- `200` — `brand` holds the brand.
+
+                            - `202` — the brand is not indexed yet and is queued for indexing (`code`: `crawl_queued`). Request it again later. Free.
+
+                            - `204` — with `cachedOnly`, the brand is not indexed. Nothing is queued. Free.
+
+                            - `400` — not a valid identifier. `message` says why. Free.
+
+                            - `404` — no brand can be returned for the identifier. `message` gives the reason. Free.
+
+                            - `413` — the brand did not fit in this response (`code`: `response_too_large`). Request it again in a smaller batch. Free.
+
+                            - `500` — the identifier could not be looked up. Request it again. Free.
+
+                            - `504` — the identifier could not be looked up in time (`code`: `timeout`). Request it again. Free.'
+                        brand:
+                          $ref: '#/components/schemas/BrandResponse'
+                        code:
+                          type: string
+                          enum:
+                          - crawl_queued
+                          - response_too_large
+                          - timeout
+                        message:
+                          type: string
+        '400':
+          description: 'The request body is malformed: `identifiers` is missing, empty or longer than 100, an item is neither a string nor a `{ type, value }` object, or the body has a property the API does not take. `message` names the problem. Nothing is charged.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: No API key was sent, or the `Authorization` header is malformed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: 'The API key is unknown or revoked, or your organization has no API credits. With `x-bf-error: paid_plan_required`, your organization is on the free plan and holds no prepaid credits.'
+          headers:
+            x-bf-error:
+              description: Why the request was refused.
+              schema:
+                type: string
+                enum:
+                - paid_plan_required
+        '429':
+          description: Your organization has fewer API credits left than this request could use. `required` is the number of identifiers that could be charged. `remaining` is what is left. Send fewer identifiers, or add credits. Nothing is charged. The same status is returned when the request throughput limit is exceeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Not enough API credits remain for this batch.
+                  quota:
+                    type: integer
+                  used:
+                    type: integer
+                  remaining:
+                    type: integer
+                  required:
+                    type: integer
 components:
   schemas:
+    PaletteTheme:
+      type: object
+      description: One theme of the brand's website. Each slot holds a color that the render of this theme showed. A slot that the render did not show is `null`. Every color is also an entry in `colors[]`.
+      properties:
+        background:
+          type: string
+          description: The page background color HEX code.
+        surface:
+          type:
+          - string
+          - 'null'
+          description: The color HEX code of cards and panels on the page background.
+        text:
+          type: string
+          description: The body text color HEX code.
+        muted:
+          type:
+          - string
+          - 'null'
+          description: The color HEX code of secondary text.
+        border:
+          type:
+          - string
+          - 'null'
+          description: The color HEX code of borders and dividers.
+        accent:
+          type:
+          - string
+          - 'null'
+          description: The color HEX code of links and buttons in this theme.
+        contrast:
+          type: number
+          description: WCAG contrast ratio between `background` and `text`.
+    PaymentChallenge:
+      type: object
+      description: 'Body of the 402 an unauthenticated request receives when the route can be paid for per request. The machine-readable challenges are in the `PAYMENT-REQUIRED` header for x402 and the `WWW-Authenticate: Payment` header for MPP; this body says the same in prose.'
+      properties:
+        message:
+          type: string
+          example: 'Payment required. Either authenticate with a Brandfetch API key (Authorization: Bearer <key>) or pay for this request with x402: sign the payment described in the PAYMENT-REQUIRED header and retry with a PAYMENT-SIGNATURE header.'
+        documentation:
+          type: string
+          example: https://docs.brandfetch.com/agents/pay-per-request
+        pricing:
+          type: object
+          properties:
+            route:
+              type: string
+              example: GET /v2/brands/*
+            price:
+              type: string
+              example: $0.10
+        resource:
+          type: string
+          description: The URL the payment is for.
+          example: https://api.brandfetch.io/v2/brands/nike.com
+        standingAccess:
+          type: string
+          example: For many requests, POST /v2/agents/access (paid the same way) provisions an API key preloaded with prepaid credits.
+    Format:
+      type: object
+      properties:
+        src:
+          type: string
+          description: File source
+        format:
+          type: string
+          enum:
+          - svg
+          - webp
+          - png
+          - jpeg
+          description: File format
+        height:
+          type:
+          - integer
+          - 'null'
+          description: File height in pixels
+        width:
+          type:
+          - integer
+          - 'null'
+          description: File width in pixels
+        size:
+          type: integer
+          description: File size in bytes
+        background:
+          type:
+          - string
+          - 'null'
+          enum:
+          - transparent
+          description: Indicates if the file has a transparent background
+    Industry:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the industry
+        score:
+          type: number
+          format: float
+          description: Probability, between 0 and 1, that the brand belongs to this industry. A value of 1 marks an industry that was set rather than predicted, for example by a curator, an import or a content rule.
+        slug:
+          type: string
+          description: URL friendly identifier
+        name:
+          type: string
+          description: Name of the industry
+        emoji:
+          type: string
+          description: An emoji for the industry
+        parent:
+          description: If the object is a sub-category, the parent industry
+          items:
+            $ref: '#/components/schemas/IndustryParent'
+    PaymentRejected:
+      type: object
+      description: 'Body of the 402 a request carrying a `PAYMENT-SIGNATURE`, or an `Authorization: Payment …` credential, receives when the payment was not accepted or could not be settled. The resource was not served. Nothing was charged, so pay afresh and retry, unless the `message` says to retry the exact request first (a refused settlement of a standing-access purchase).'
+      properties:
+        message:
+          type: string
+          example: The payment was not accepted, so the request was not served and nothing was charged. Sign a new payment for the PAYMENT-REQUIRED header and retry.
+        reason:
+          type: string
+          description: 'The payment service''s reason code, e.g. `insufficient_funds`. An MPP credential adds `credential_spent` (it already paid for a request), `credential_in_use` (another request is settling it; retry this exact request in a moment) `credential_malformed` (it could not be read) and `challenge_invalid` (it answers a challenge this API did not issue; answer a fresh one). A Tempo transaction that cannot complete adds `nonce_already_used`, `transaction_rejected`, `transaction_reverted` and `transaction_expired`: the transfer did not happen, so answer a fresh challenge.'
+          example: insufficient_funds
+        documentation:
+          type: string
+          example: https://docs.brandfetch.com/agents/pay-per-request
     BrandResponse:
       type: object
       properties:
@@ -848,13 +1623,33 @@ components:
               tags:
                 type: array
                 items:
-                  type: object
-                  properties: {}
-                description: 'A list of string attached to the logo. For example, if the logo icon is "photographic" rather than a logomark. Possible values:
+                  type: string
+                description: 'What the image is. Brandfetch tags a brand''s icon and logo; one that is no longer the brand''s main icon or logo keeps its tags and is listed with type `other`. Possible values:
 
-                  - **photographic**: The asset image is photographic in nature. For example, if this tag is present on an icon or Logo asset, it means the image has photographic qualities and is likely not a typical brand logotype or logomark graphic.
+                  - **photographic**: The image is a photograph, or a logo shown on one, such as a sign or a vehicle.
 
-                  - **portrait**: The asset image is a portrait or portrait-like. This is often the case when a sole proprietorship or small brand uses a self portrait as their logo or icon.'
+                  - **portrait**: The image is a photograph mainly of one or more people. An image tagged `portrait` is also tagged `photographic`.
+
+                  - **illustration**: The image is a drawing, painting, cartoon or 3D render that is not a logo.
+
+                  - **screenshot**: The image is a screenshot or mockup of software, a website, an app or a device screen. Logos only.
+
+                  - **text**: The image is a flyer, poster, advert, social media post, infographic, document or menu.
+
+                  - **placeholder**: The image is a default avatar, a blank or single-colour image, or a "no image" graphic.
+
+                  - **wordmark**: The logo is the brand''s name set in type, with no separate symbol.
+
+                  - **lettermark**: The logo is initials, a monogram or a single letter. Icons only.
+
+                  - **symbol**: The logo is a symbol alone, without text. Icons only.
+
+                  - **combination**: The logo pairs a symbol with the name.
+
+                  - **emblem**: The logo''s text sits inside a badge, seal or crest.
+
+
+                  The mark types, `wordmark` to `emblem`, go only on an image that is mainly a logo, one at most. A tag is assigned only when the image clearly is one, so an image without a tag can still be any of these. Logos and icons that Brandfetch has not refreshed since October 2026 may carry fewer tags, or none. Brandfetch may add values.'
               type:
                 type: string
                 description: 'See logo type. Possible values:
@@ -954,16 +1749,65 @@ components:
               tags:
                 type: array
                 items:
-                  type: object
-                  properties: {}
-                description: Tags associated with the image
+                  type: string
+                description: 'What the image is. A banner that is no longer the brand''s main one keeps its tags and is listed with type `other`. Possible values:
+
+                  - **photographic**: The image is a photograph, or a logo shown on one. Banners and pictures.
+
+                  - **portrait**: The image is a photograph mainly of one or more people. Banners and pictures. An image tagged `portrait` is also tagged `photographic`.
+
+                  - **illustration**: The image is a drawing, painting, cartoon or 3D render that is not a logo. Banners and pictures.
+
+                  - **screenshot**: The image is a screenshot or mockup of software, a website, an app or a device screen. Pictures.
+
+                  - **text**: The image is a flyer, poster, advert, social media post, infographic, document or menu. Banners and pictures.
+
+                  - **pattern**: The image is an abstract background, texture, gradient or pattern with no subject. Pictures.
+
+                  - **placeholder**: The image is blank, a single colour, or a "no image" graphic. Banners.
+
+
+                  A tag is assigned only when the image clearly is one, so an image without a tag can still be any of these. Images that Brandfetch has not refreshed since October 2026 have no tags. Brandfetch may add values.'
               type:
                 type: string
-                description: Image type
+                description: Image type. `picture` entries are images published on the brand's own site and carry `pictureMetadata`. Their `tags` say what each one is, such as a photograph, a screenshot or a flyer.
                 enum:
                 - banner
                 - other
-          description: Banner & other images of the brand
+                - picture
+              pictureMetadata:
+                type: object
+                description: Present on `picture` entries only. Lets you choose between a brand's pictures without fetching the files first.
+                properties:
+                  score:
+                    type: number
+                    description: How representative of the brand we consider this picture
+                  rank:
+                    type: integer
+                    description: Position of this picture among the brand's pictures, by descending score
+                  naturalWidth:
+                    type: integer
+                    description: Intrinsic width of the image in pixels
+                  naturalHeight:
+                    type: integer
+                    description: Intrinsic height of the image in pixels
+                  alt:
+                    type: string
+                    description: Alt text published with the image on the brand's site
+                  sourceUrl:
+                    type: string
+                    description: URL of the image on the brand's own site. A `picture` can arrive with an empty `formats` array, in which case this is how you reach the image.
+                  imageCategory:
+                    type:
+                    - string
+                    - 'null'
+                    description: Category we classified the image into
+                  categoryConfidence:
+                    type:
+                    - number
+                    - 'null'
+                    description: Confidence in the assigned `imageCategory`
+          description: Banner, picture & other images of the brand
         qualityScore:
           type: number
           description: 'Score between 0-1 which indicates the quality of the data for the given brand. Useful when you don''t want to show lower quality brands to your users.
@@ -1016,7 +1860,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Industry'
-              description: An array of industry categories, sorted by descending confidence. See the full list of industries [here](https://docs.google.com/spreadsheets/d/1N44nMfVtPCFM4ebTcmRlqbyxjFtDAGVuqd0mh0dcOU0/edit?usp=sharing)
+              description: An array of industries, sorted by descending `score`. A sub-industry carries its top-level industry in `parent`. See the full list of industries [here](https://docs.google.com/spreadsheets/d/1N44nMfVtPCFM4ebTcmRlqbyxjFtDAGVuqd0mh0dcOU0/edit?usp=sharing)
             kind:
               type:
               - string
@@ -1040,78 +1884,211 @@ components:
         urn:
           type: string
           description: Uniform Resource Name for the brand
-    Format:
-      type: object
-      properties:
-        src:
-          type: string
-          description: File source
-        format:
-          type: string
-          enum:
-          - svg
-          - webp
-          - png
-          - jpeg
-          description: File format
-        height:
+        palette:
           type:
-          - integer
+          - object
           - 'null'
-          description: File height in pixels
-        width:
-          type:
-          - integer
-          - 'null'
-          description: File width in pixels
-        size:
-          type: integer
-          description: File size in bytes
-        background:
-          type:
-          - string
-          - 'null'
-          enum:
-          - transparent
-          description: Indicates if the file has a transparent background
-    Industry:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the industry
-        score:
-          type: number
-          format: float
-          description: Score between 0-1 about the confidence in the industry
-        slug:
-          type: string
-          description: URL friendly identifier
-        name:
-          type: string
-          description: Name of the industry
-        emoji:
-          type: string
-          description: An emoji for the industry
-        parent:
-          description: If the object is a sub-category, the parent industry
-          items:
-            $ref: '#/components/schemas/IndustryParent'
-    IndustryParent:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the industry
-        slug:
-          type: string
-          description: URL friendly identifier
-        name:
-          type: string
-          description: Name of the industry
-        emoji:
-          type: string
-          description: An emoji for the industry
+          description: The brand's color palette. Present only when the request sets `palette=true` or `palette=1`. When a brand has no palette yet, the first request builds one from the brand's last crawl without a new render. Then `themes` and `onPairs` can be empty until the next crawl. When Brandfetch finds no color that it can defend as the brand's color, no color has the role `primary`.
+          properties:
+            colors:
+              type: array
+              items:
+                type: object
+                properties:
+                  hex:
+                    type: string
+                    description: Color HEX code.
+                  name:
+                    type:
+                    - string
+                    - 'null'
+                    description: Name of the closest named color. Uses the same list as `colors[].name`, so the same HEX code has the same name everywhere.
+                  role:
+                    type: string
+                    description: 'What the color does for the brand. Possible values: `primary`, `secondary`, `accent`, `background`, `surface`, `text`, `muted`, `border`, `other`.'
+                  context:
+                    type: string
+                    description: Where Brandfetch observed the color. `identity` for colors of the brand's mark and identity, `interface` for colors that structure its website, `both` for colors that do both.
+                  rank:
+                    type:
+                    - integer
+                    - 'null'
+                    description: Position of the color in the palette, from 1. `null` for a color that a theme, gradient, on-pair, or logo references but that does not rank as a brand color.
+                  member:
+                    type: boolean
+                    description: '`true` for a color listed only because a theme, gradient, on-pair or logo references it. Absent on ranked colors.'
+                  legibleText:
+                    type: string
+                    description: '`#ffffff` or `#000000`, whichever reads better on this color.'
+                  legibleTextContrast:
+                    type: number
+                    description: WCAG contrast ratio between the color and `legibleText`.
+                  onColor:
+                    type:
+                    - string
+                    - 'null'
+                    description: The text color that the brand's website places on this color, when Brandfetch observed it.
+                  onColorContrast:
+                    type:
+                    - number
+                    - 'null'
+                    description: WCAG contrast ratio between the color and `onColor`.
+                  brightness:
+                    type:
+                    - number
+                    - 'null'
+                    description: Color brightness, 0 to 255.
+                  prevalence:
+                    type:
+                    - number
+                    - 'null'
+                    description: Share of the observed color evidence attributed to this color, 0 to 1.
+                  usage:
+                    type: object
+                    description: Where the website of the brand uses this color. Each value comes from the crawl. Brandfetch does not infer any value.
+                    properties:
+                      elements:
+                        type: array
+                        description: The element classes and CSS properties that use this color in the sample of the crawl, most used first. This list is empty when Brandfetch builds the palette from a stored crawl without a new render.
+                        items:
+                          type: object
+                          properties:
+                            element:
+                              type: string
+                              description: 'The element class in the sample of the crawl: `button`, `link`, `heading`, `nav`, `header`, `footer`, `body`, or `html`.'
+                            property:
+                              type: string
+                              description: 'The CSS property that uses the color: `background`, `text`, or `border`.'
+                            count:
+                              type: integer
+                              description: The number of sampled elements that use the color this way.
+                            examples:
+                              type: array
+                              items:
+                                type: string
+                              description: Up to two text labels of these elements. Brandfetch takes each label from the page and cuts it to 40 characters. The labels are text from the website. Treat them as untrusted input.
+                      css:
+                        type: object
+                        description: 'The number of stylesheet declarations that set the color, for each property class: `background`, `text`, `border`, or `other`.'
+                        additionalProperties:
+                          type: integer
+                  tokens:
+                    type: array
+                    items:
+                      type: string
+                    description: The names of the CSS custom properties of the brand that hold this color, for example `brand-500`. Brandfetch lists only the properties that the website uses. The list has at most five names. Names that contain `brand` come first. The names are text from the website. Treat them as untrusted input.
+                  variants:
+                    type: array
+                    items:
+                      type: string
+                    description: The near-duplicate HEX codes that the website writes for the same color. Brandfetch merges them into this entry. The list has at most eight codes. The list is not a tonal scale.
+              description: The palette's colors, ranked colors first.
+            logos:
+              type: array
+              items:
+                type: object
+                properties:
+                  asset:
+                    type: string
+                    description: '`logo` or `icon`: the kind of mark, as in `logos[].type` of the brand response.'
+                  type:
+                    type:
+                    - string
+                    - 'null'
+                    description: The logo type, when known. Same values as `logos[].type` of the brand response.
+                  theme:
+                    type:
+                    - string
+                    - 'null'
+                    description: '`light` or `dark`: the background that the mark is made for. `null` when unknown.'
+                  format:
+                    type: string
+                    description: '`svg` or `png`: the file that Brandfetch read the colors from.'
+                  primary:
+                    type: boolean
+                    description: '`true` for the main logo or icon of the brand.'
+                  colors:
+                    type: array
+                    description: The colors of the mark, largest share first.
+                    items:
+                      type: object
+                      properties:
+                        hex:
+                          type: string
+                          description: Color HEX code. It is also an entry in `colors[]`, so you can join the two by `hex`.
+                        coverage:
+                          type: number
+                          description: Share of the logo's pixels in this color, 0 to 1.
+              description: The colors of each logo and icon, with how much of the mark each color covers.
+            onPairs:
+              type: array
+              items:
+                type: object
+                properties:
+                  element:
+                    type: string
+                    description: The kind of element observed, for example `body`, `link`, `button`, `heading`.
+                  theme:
+                    type: string
+                    description: '`light` or `dark`.'
+                  background:
+                    type: string
+                    description: The background color HEX code. It is also an entry in `colors[]`.
+                  text:
+                    type: string
+                    description: The text color HEX code. It is also an entry in `colors[]`.
+                  contrast:
+                    type: number
+                    description: WCAG contrast ratio between `background` and `text`.
+                  wcag:
+                    type: string
+                    description: '`AAA`, `AA`, `AA-large` or `fail`.'
+                  count:
+                    type: integer
+                    description: How many elements showed this pair.
+              description: The background and text color pairs that Brandfetch observed on the brand's website, with their contrast. Empty for a palette built from a stored crawl without a new render.
+            gradients:
+              type: array
+              items:
+                type: object
+                properties:
+                  rank:
+                    type: integer
+                    description: Position of the gradient, from 1.
+                  type:
+                    type: string
+                    description: '`linear`, `radial`, or `conic`.'
+                  angle:
+                    type:
+                    - number
+                    - 'null'
+                    description: The angle of a linear gradient, in degrees. `null` when the stylesheet gives none.
+                  stops:
+                    type: array
+                    description: The color stops, in order.
+                    items:
+                      type: object
+                      properties:
+                        hex:
+                          type: string
+                          description: Color HEX code. It is also an entry in `colors[]`.
+                        position:
+                          type:
+                          - number
+                          - 'null'
+                          description: Position of the stop, 0 to 1. `null` when the stylesheet gives none.
+                  css:
+                    type: string
+                    description: 'The gradient as a CSS value, for example `linear-gradient(90deg, #ff0000 0%, #0000ff 100%)`.'
+              description: 'Gradients from the brand''s stylesheets that use a brand color, at most four. Every stop color is also an entry in `colors[]`, with `rank: null` when it is not a brand color.'
+            themes:
+              type: object
+              description: The `light` and `dark` themes that the website showed. A theme that Brandfetch did not observe is absent. A palette built from a stored crawl without a new render often has no themes.
+              properties:
+                light:
+                  $ref: '#/components/schemas/PaletteTheme'
+                dark:
+                  $ref: '#/components/schemas/PaletteTheme'
     Location:
       type: object
       description: Company's headquarter information
@@ -1146,10 +2123,45 @@ components:
           - string
           - 'null'
           description: Headquarter subregion
+    IndustryParent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the industry
+        slug:
+          type: string
+          description: URL friendly identifier
+        name:
+          type: string
+          description: Name of the industry
+        emoji:
+          type: string
+          description: An emoji for the industry
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-x-refined-from:
-- brand-api-brandfetch-openapi.yml
-- brandfetch-brand-api.yml
+    clientId:
+      type: apiKey
+      in: query
+      name: c
+      description: Your Brand Search client ID, sent as the `c` query parameter. Get one at https://developers.brandfetch.com.
+    x402Payment:
+      type: apiKey
+      in: header
+      name: PAYMENT-SIGNATURE
+      description: 'An x402 payment for this one request: the signed payment for the challenge a bare request receives in its `PAYMENT-REQUIRED` header. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request.'
+    mppPayment:
+      type: http
+      scheme: Payment
+      description: 'An MPP (Machine Payments Protocol) payment, settled through Stripe: the credential answering one of the `WWW-Authenticate: Payment` challenges a bare request receives. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request#paying-with-mpp.'
+x-service-info:
+  categories:
+  - brand-data
+  - company-data
+  - logos
+  docs:
+    homepage: https://docs.brandfetch.com
+    apiReference: https://docs.brandfetch.com/reference/brand-api
+    llms: https://brandfetch.com/llms.txt

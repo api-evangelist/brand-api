@@ -5,6 +5,10 @@ info:
   license:
     name: MIT
   version: 1.0.0
+  contact:
+    name: Brandfetch Support
+    url: https://brandfetch.com
+    email: support@brandfetch.io
 servers:
 - url: https://api.brandfetch.io
 tags:
@@ -13,7 +17,7 @@ paths:
   /v2/viewer:
     get:
       summary: Get the authenticated viewer
-      description: 'Returns the identity of the credential used to authenticate the request: an API key or a user session token (JWT). Use it to verify a credential during integration setup (a `200` response means the credential is valid; `401`/`403` means it is missing, unknown, or revoked) and to display which API key and organization are connected. Requests to this endpoint are free: they never consume API credits.'
+      description: 'Returns the identity of the credential used to authenticate the request: an API key or a user session token (JWT). Use it to verify a credential during integration setup (a `200` response means the credential is valid; `401`/`403` means it is missing, unknown, or revoked) and to display which API key and organization are connected. A key an agent bought also says how it was paid for and how to add credits. Requests to this endpoint are free: they never consume API credits.'
       operationId: getViewer
       tags:
       - viewer
@@ -49,6 +53,30 @@ paths:
                       id: cl5s9fps1275071ol9h7gs072m
                       urn: urn:brandfetch:organization:cl5s9fps1275071ol9h7gs072m
                       name: Acme Inc.
+                agentKey:
+                  summary: Authenticated with an API key an agent bought
+                  value:
+                    type: api-key
+                    id: idA9kR2mXw
+                    urn: urn:brandfetch:organization:cm1q8x0b2000308l4f9ae2k7d:api-key:idA9kR2mXw
+                    name: Agent Key
+                    createdAt: '2026-09-24T18:02:51.000Z'
+                    usage:
+                      used: 37
+                      quota: 2000
+                    organization:
+                      id: cm1q8x0b2000308l4f9ae2k7d
+                      urn: urn:brandfetch:organization:cm1q8x0b2000308l4f9ae2k7d
+                      name: Agent 0x0000…0a11
+                    agent:
+                      payer:
+                        type: wallet
+                        network: eip155:8453
+                        address: '0x0000000000000000000000000000000000000a11'
+                      topUp:
+                        method: POST
+                        url: https://api.brandfetch.io/v2/agents/access
+                        note: Pay again from the same wallet to add credits to this key. Add rotateKey=true to replace the key while doing so, which is also how to recover a lost key.
                 user:
                   summary: Authenticated with a user session token
                   value:
@@ -59,18 +87,46 @@ paths:
                     email: jane@acme.com
                     createdAt: '2025-11-02T16:41:12.000Z'
         '401':
-          description: Unauthorized. The Authorization header is missing or the credential could not be resolved.
+          description: Unauthorized. The request carries no Authorization header. The body points an agent without a key at how to get access.
           content:
             application/json:
               schema:
                 type: object
+                required:
+                - message
+                - agentAccess
                 properties:
                   message:
                     type: string
                     enum:
                     - Unauthorized
+                  agentAccess:
+                    type: object
+                    description: 'Where an agent without an API key can get access: buy a key with an x402 or MPP payment, or pay for each request individually.'
+                    required:
+                    - description
+                    - documentation
+                    - offer
+                    properties:
+                      description:
+                        type: string
+                        description: The two ways in, in prose.
+                      documentation:
+                        type: string
+                        format: uri
+                        description: The agent access guide.
+                      offer:
+                        type: string
+                        format: uri
+                        description: 'The agent access endpoint. `GET` it to read the offer: the price, how to pay with each protocol, and the per-request alternative.'
+              example:
+                message: Unauthorized
+                agentAccess:
+                  description: An agent without an API key can buy one with an x402 or MPP payment, or pay for each Brand API, Brand Context API and Transaction API request individually. The offer describes both.
+                  documentation: https://docs.brandfetch.com/agents/overview
+                  offer: https://api.brandfetch.io/v2/agents/access
         '403':
-          description: Forbidden. The credential was rejected, e.g. a revoked API key or an expired session token.
+          description: Forbidden. The credential was rejected, e.g. an empty or unknown credential, a revoked API key or an expired session token.
 components:
   schemas:
     ViewerApiKeyResponse:
@@ -140,6 +196,63 @@ components:
               - string
               - 'null'
               description: Display name of the organization.
+        agent:
+          type: object
+          description: 'Present only on a key an agent bought through `POST /v2/agents/access`: how it was paid for, and how to add credits.'
+          required:
+          - payer
+          - topUp
+          properties:
+            payer:
+              description: 'What paid for the key: an x402 or Tempo wallet, which can pay again to add credits to this key, or a card, which buys a new key with every payment.'
+              oneOf:
+              - type: object
+                title: Wallet
+                required:
+                - type
+                - network
+                - address
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - wallet
+                  network:
+                    type: string
+                    description: CAIP-2 network the wallet paid on, e.g. `eip155:8453` for x402 on Base.
+                  address:
+                    type: string
+                    description: The wallet's address, in lowercase.
+              - type: object
+                title: Card
+                required:
+                - type
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - card
+              discriminator:
+                propertyName: type
+            topUp:
+              type: object
+              description: How to add credits.
+              required:
+              - method
+              - url
+              - note
+              properties:
+                method:
+                  type: string
+                  enum:
+                  - POST
+                url:
+                  type: string
+                  format: uri
+                  description: The agent access endpoint.
+                note:
+                  type: string
+                  description: What paying again does for this key.
     ViewerUserResponse:
       type: object
       title: User
@@ -183,3 +296,26 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
+    clientId:
+      type: apiKey
+      in: query
+      name: c
+      description: Your Brand Search client ID, sent as the `c` query parameter. Get one at https://developers.brandfetch.com.
+    x402Payment:
+      type: apiKey
+      in: header
+      name: PAYMENT-SIGNATURE
+      description: 'An x402 payment for this one request: the signed payment for the challenge a bare request receives in its `PAYMENT-REQUIRED` header. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request.'
+    mppPayment:
+      type: http
+      scheme: Payment
+      description: 'An MPP (Machine Payments Protocol) payment, settled through Stripe: the credential answering one of the `WWW-Authenticate: Payment` challenges a bare request receives. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request#paying-with-mpp.'
+x-service-info:
+  categories:
+  - brand-data
+  - company-data
+  - logos
+  docs:
+    homepage: https://docs.brandfetch.com
+    apiReference: https://docs.brandfetch.com/reference/brand-api
+    llms: https://brandfetch.com/llms.txt

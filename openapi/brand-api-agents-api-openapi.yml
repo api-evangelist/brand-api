@@ -1,0 +1,472 @@
+openapi: 3.2.0
+info:
+  title: Brandfetch Agents API
+  description: Our APIs help you personalize your customer journey through unique branded experiences.
+  license:
+    name: MIT
+  version: 1.0.0
+  contact:
+    name: Brandfetch Support
+    url: https://brandfetch.com
+    email: support@brandfetch.io
+servers:
+- url: https://api.brandfetch.io
+tags:
+- name: Agents
+paths:
+  /v2/agents/access:
+    get:
+      summary: Describe the agent access offer
+      description: 'What an agent can buy and how to pay for it: standing API access — an organization, an API key preloaded with prepaid credits and an MCP token — sold for one x402 or MPP payment. Needs no credential. Written for an agent that will act on it. See https://docs.brandfetch.com/agents/overview.'
+      operationId: getAgentAccessOffer
+      security: []
+      tags:
+      - Agents
+      responses:
+        '200':
+          description: The offer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAccessOffer'
+    post:
+      summary: Buy standing access with an x402 or MPP payment
+      description: 'Pay a whole number of US dollars to receive a Brandfetch organization, an API key holding 20 prepaid API credits per dollar, and an MCP bearer token. One credit is one Brand API, Brand Context API or Transaction API request. Call once without a payment to receive the 402: its `PAYMENT-REQUIRED` header is the x402 challenge (USDC on Base), its `WWW-Authenticate` header the MPP challenges (USDC.e on Tempo, or a card through a Stripe shared payment token). Pay one and repeat the request with the result — `PAYMENT-SIGNATURE` for x402, `Authorization: Payment …` for MPP. A wallet owns the organization it buys: paying again from the same wallet adds credits to the same key, and `rotateKey=true` replaces the key while doing so. A card names no wallet, so each card payment buys its own organization and key. The API key and MCP token are returned once, in the response that completes the purchase, and a payment is never charged twice. A later request carrying the same payment is answered `409` without them: a settled payment is public (an x402 signature is on-chain), so presenting it proves nothing about who sent it. If the purchase is answered with a `500` that says to retry, or with no response at all, retry the exact request at once: the first retry to succeed within three minutes of the payment receives the credential, unless it was already returned in a response the client lost, which is answered `409` `credential_already_delivered`. The credits are granted whether or not the credential is returned. See https://docs.brandfetch.com/agents/overview.'
+      operationId: purchaseAgentAccess
+      tags:
+      - Agents
+      security:
+      - x402Payment: []
+      - mppPayment: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '1'
+          max: '500'
+        protocols:
+        - x402: {}
+        - mpp:
+            method: tempo
+            intent: charge
+            currency: '0x20C000000000000000000000b9537d11c60E8b50'
+        - mpp:
+            method: stripe
+            intent: charge
+            currency: usd
+        offers:
+        - amount: null
+          currency: '0x20C000000000000000000000b9537d11c60E8b50'
+          description: 'Standing Brandfetch API access: prepaid credits for the whole dollars named by ?usd='
+          intent: charge
+          method: tempo
+        - amount: null
+          currency: usd
+          description: 'Standing Brandfetch API access: prepaid credits for the whole dollars named by ?usd='
+          intent: charge
+          method: stripe
+      parameters:
+      - name: usd
+        in: query
+        required: true
+        description: Whole US dollars to pay, between 1 and 500. Buys `usd × 20` credits.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+        examples:
+          usd:
+            summary: Five dollars
+            value: 5
+      - name: rotateKey
+        in: query
+        required: false
+        description: 'When `true` on a top-up, issues a new key holding the combined balance, returned once like any other. The wallet''s earlier keys stop working once the new key has been returned, even if the client never receives that response. If the rotation is answered with an error instead of the new key, they keep working. A retry answered `409` `credential_already_delivered` means the rotation completed: pay again with `rotateKey=true` for a new key.'
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: 'Topped up: the wallet already owned an organization. The credential is returned once, in this response.'
+          headers:
+            Cache-Control:
+              description: '`private` — the response carries a credential, so no shared cache may store it.'
+              schema:
+                type: string
+            PAYMENT-RESPONSE:
+              description: 'On the response to the request that settled an x402 payment: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`). A retry that delivers the credential after a failed response does not carry it.'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'On the response to the request that settled an MPP payment: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). A retry that delivers the credential after a failed response does not carry it.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAccessCredential'
+        '201':
+          description: 'Provisioned: this wallet''s first purchase, or a card purchase, created its organization and key. The credential is returned once, in this response.'
+          headers:
+            Cache-Control:
+              description: '`private` — the response carries a credential, so no shared cache may store it.'
+              schema:
+                type: string
+            PAYMENT-RESPONSE:
+              description: 'On the response to the request that settled an x402 payment: the base64-encoded settlement receipt (`success`, `transaction`, `network`, `payer`). A retry that delivers the credential after a failed response does not carry it.'
+              schema:
+                type: string
+            Payment-Receipt:
+              description: 'On the response to the request that settled an MPP payment: the base64url-encoded receipt (`method`, `reference`, `status`, `timestamp`). A retry that delivers the credential after a failed response does not carry it.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAccessCredential'
+        '400':
+          description: The `usd` parameter is missing, not a whole number, or outside the bounds; or the payment does not name the paying wallet.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                    - usd must be a whole number of US dollars between 1 and 500.
+        '402':
+          description: 'Payment required. Without a credential, the quote for `usd` dollars: the `PAYMENT-REQUIRED` header describes the x402 payment (USDC on Base) and `WWW-Authenticate` the MPP challenges. A settlement that was refused says so in the `message`: retry the exact request once before signing a new payment, since the retry is answered from the payment if another attempt settled it; refused again, request a fresh challenge and pay afresh. Otherwise, with a credential that was not accepted, the `reason` — nothing was charged; pay afresh and retry (a `credential_in_use` reason means another request of yours is settling the same credential: retry the exact request in a moment instead; a `challenge_invalid` reason means the MPP credential does not answer a challenge this API issued: answer one of the fresh challenges, unless this retries an MPP purchase already paid for: that purchase is complete and its credits are on the organization, so a Tempo wallet pays again with `rotateKey=true` for a working key and a card purchase contacts support).'
+          headers:
+            PAYMENT-REQUIRED:
+              description: 'The x402 v2 payment challenge: base64-encoded JSON whose `accepts` array lists how to pay (scheme `exact`, network `eip155:8453`, the USDC asset, the `amount` in USDC''s six decimals and the receiving `payTo` address). Sign the payment with an x402 client and retry with the result in a `PAYMENT-SIGNATURE` header. See https://docs.brandfetch.com/agents/pay-per-request.'
+              schema:
+                type: string
+            Cache-Control:
+              description: '`no-store` — a challenge is issued for one request and must not be cached.'
+              schema:
+                type: string
+            WWW-Authenticate:
+              description: 'One `Payment` challenge per payment method Stripe offers for the amount (USDC.e on Tempo from a cent; cards via shared payment tokens from $0.50), comma-separated. Answer one with an `Authorization: Payment …` credential.'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/PaymentChallenge'
+                - $ref: '#/components/schemas/PaymentRejected'
+        '409':
+          description: 'The request carries a payment that is already being completed, or whose purchase is complete; it carries no credential and no challenge, and the payment is not charged again. `payment_in_progress`: another request carrying the same payment is completing the purchase and its response carries the credential; retry the exact request after `Retry-After` if it does not arrive, and never pay again. `credential_already_delivered`: the credential was returned with the response that completed the purchase and is not returned again; the credits are on the organization named in the body. To replace a lost key, pay again from the same wallet with `rotateKey=true`; a card purchase cannot be recovered, so make a new one. `credential_replaced`: a later rotation replaced the key this payment bought; the organization''s credits, these included, are intact. Pay again from the same wallet with `rotateKey=true` for a working key; for a card purchase, contact support with the `paymentReference`.'
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying, on `payment_in_progress`.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: What happened and what to do next, for whoever is reading.
+                  reason:
+                    type: string
+                    enum:
+                    - payment_in_progress
+                    - credential_already_delivered
+                    - credential_replaced
+                  paymentReference:
+                    type: string
+                    description: Identifies the payment; quote it to support.
+                  organization:
+                    type: object
+                    description: The organization the purchase credited. Present on `credential_already_delivered` and `credential_replaced`.
+                    properties:
+                      id:
+                        type: string
+                      urn:
+                        type: string
+                        example: urn:brandfetch:organization:xig9b54wddtihs0dktyhau0i
+        '500':
+          description: 'The purchase did not finish, and the payment may have been taken. With a `paymentReference`, the `message` says which of two cases applies. If it says to retry, retry this exact request (same `PAYMENT-SIGNATURE` or `Authorization: Payment` header) at once: the first retry to succeed within three minutes of the payment receives the credential, and no later request does. If it says not to pay again, the credential can no longer be delivered automatically: do not pay again, and contact support with the `paymentReference`. Without a `paymentReference`, an unexpected error: retry the exact request, which never charges the payment twice, and do not pay again.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: 'Says whether to retry this exact request or not to pay again, for instance: This payment may already have been taken, but what it bought could not be delivered automatically. Do not pay again for it: contact support with the payment reference.'
+                    example: Provisioning failed after your payment was accepted. Retry this exact request to receive your credential, or contact support with the payment reference.
+                  paymentReference:
+                    type: string
+                    description: Identifies the payment; quote it to support.
+        '503':
+          description: 'The request was not served. Without a `reason`, the payment service could not be reached and nothing was charged: retry after the `Retry-After` interval. With `reason: payment_outcome_unknown`, whether the payment went through is not known yet: retry the exact request after the interval, and do not sign a new payment for it.'
+          headers:
+            Retry-After:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                    enum:
+                    - payment_outcome_unknown
+                  paymentReference:
+                    type: string
+                    description: 'Present with `reason: payment_outcome_unknown`.'
+components:
+  schemas:
+    PaymentChallenge:
+      type: object
+      description: 'Body of the 402 an unauthenticated request receives when the route can be paid for per request. The machine-readable challenges are in the `PAYMENT-REQUIRED` header for x402 and the `WWW-Authenticate: Payment` header for MPP; this body says the same in prose.'
+      properties:
+        message:
+          type: string
+          example: 'Payment required. Either authenticate with a Brandfetch API key (Authorization: Bearer <key>) or pay for this request with x402: sign the payment described in the PAYMENT-REQUIRED header and retry with a PAYMENT-SIGNATURE header.'
+        documentation:
+          type: string
+          example: https://docs.brandfetch.com/agents/pay-per-request
+        pricing:
+          type: object
+          properties:
+            route:
+              type: string
+              example: GET /v2/brands/*
+            price:
+              type: string
+              example: $0.10
+        resource:
+          type: string
+          description: The URL the payment is for.
+          example: https://api.brandfetch.io/v2/brands/nike.com
+        standingAccess:
+          type: string
+          example: For many requests, POST /v2/agents/access (paid the same way) provisions an API key preloaded with prepaid credits.
+    AgentAccessCredential:
+      type: object
+      properties:
+        organization:
+          type: object
+          properties:
+            id:
+              type: string
+            urn:
+              type: string
+              example: urn:brandfetch:organization:xig9b54wddtihs0dktyhau0i
+        apiKey:
+          type: object
+          description: 'The API key. Returned once, in the response that completes the purchase: store it.'
+          properties:
+            id:
+              type: string
+            key:
+              type: string
+              description: 'Send as `Authorization: Bearer <key>`.'
+            name:
+              type: string
+              example: Agent Key
+        apiClient:
+          type:
+          - object
+          - 'null'
+          description: The Logo API client, for `cdn.brandfetch.io` URLs.
+          properties:
+            clientId:
+              type: string
+        mcp:
+          type: object
+          properties:
+            url:
+              type: string
+              example: https://mcp.brandfetch.io/mcp
+            token:
+              type: string
+              description: Bearer token for the Brandfetch MCP server; starts with `bf1.`.
+        credits:
+          type: object
+          properties:
+            granted:
+              type: integer
+              description: Credits this payment bought.
+              example: 20
+            balance:
+              type: integer
+              description: Credits the key holds now.
+              example: 20
+            creditsPerUsd:
+              type: integer
+              example: 20
+            usdPaid:
+              type: number
+              example: 1
+            deduplicated:
+              type: boolean
+              description: '`false` when this request granted the credits. `true` when an earlier attempt at the same purchase had already granted them, before its response failed: they are granted once either way.'
+        usage:
+          type: object
+          properties:
+            authorization:
+              type: string
+              example: Bearer <key>
+            note:
+              type: string
+        topUp:
+          type: object
+          properties:
+            method:
+              type: string
+              example: POST
+            url:
+              type: string
+            note:
+              type: string
+        documentation:
+          type: string
+          example: https://docs.brandfetch.com/agents/overview
+    AgentAccessOffer:
+      type: object
+      properties:
+        documentation:
+          type: string
+          example: https://docs.brandfetch.com/agents/overview
+        mcp:
+          type: string
+          example: https://mcp.brandfetch.io/mcp
+        offer:
+          type: object
+          properties:
+            method:
+              type: string
+              example: POST
+            endpoint:
+              type: string
+              example: https://api.brandfetch.io/v2/agents/access
+            minUsd:
+              type: integer
+              example: 1
+            maxUsd:
+              type: integer
+              example: 500
+            creditsPerUsd:
+              type: integer
+              example: 20
+            description:
+              type: string
+        payment:
+          type: object
+          description: How to pay, per protocol. x402 is always on offer; `mpp` is listed, and described, exactly where the deployment's billing can take it — production does.
+          properties:
+            protocols:
+              type: array
+              items:
+                type: string
+              example:
+              - x402
+              - mpp
+            x402:
+              type: object
+              properties:
+                protocol:
+                  type: string
+                  example: x402
+                network:
+                  type: string
+                  description: CAIP-2 network identifier.
+                  example: eip155:8453
+                steps:
+                  type: array
+                  items:
+                    type: string
+            mpp:
+              type: object
+              properties:
+                protocol:
+                  type: string
+                  example: mpp
+                methods:
+                  type: array
+                  description: 'The MPP payment methods on offer: `tempo` (USDC.e on Tempo) and `stripe` (a card via a shared payment token).'
+                  items:
+                    type: string
+                  example:
+                  - tempo
+                  - stripe
+                steps:
+                  type: array
+                  items:
+                    type: string
+        perRequestAlternative:
+          type: object
+          properties:
+            description:
+              type: string
+            protocols:
+              type: array
+              description: 'The per-request payment protocols on offer: `x402`, plus `mpp` where billing takes it.'
+              items:
+                type: string
+              example:
+              - x402
+              - mpp
+            prices:
+              type: object
+              properties:
+                brandApi:
+                  type: string
+                  example: $0.10
+                brandContextApi:
+                  type: string
+                  example: $0.10
+                transactionApi:
+                  type: string
+                  example: $0.10
+    PaymentRejected:
+      type: object
+      description: 'Body of the 402 a request carrying a `PAYMENT-SIGNATURE`, or an `Authorization: Payment …` credential, receives when the payment was not accepted or could not be settled. The resource was not served. Nothing was charged, so pay afresh and retry, unless the `message` says to retry the exact request first (a refused settlement of a standing-access purchase).'
+      properties:
+        message:
+          type: string
+          example: The payment was not accepted, so the request was not served and nothing was charged. Sign a new payment for the PAYMENT-REQUIRED header and retry.
+        reason:
+          type: string
+          description: 'The payment service''s reason code, e.g. `insufficient_funds`. An MPP credential adds `credential_spent` (it already paid for a request), `credential_in_use` (another request is settling it; retry this exact request in a moment) `credential_malformed` (it could not be read) and `challenge_invalid` (it answers a challenge this API did not issue; answer a fresh one). A Tempo transaction that cannot complete adds `nonce_already_used`, `transaction_rejected`, `transaction_reverted` and `transaction_expired`: the transfer did not happen, so answer a fresh challenge.'
+          example: insufficient_funds
+        documentation:
+          type: string
+          example: https://docs.brandfetch.com/agents/pay-per-request
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    clientId:
+      type: apiKey
+      in: query
+      name: c
+      description: Your Brand Search client ID, sent as the `c` query parameter. Get one at https://developers.brandfetch.com.
+    x402Payment:
+      type: apiKey
+      in: header
+      name: PAYMENT-SIGNATURE
+      description: 'An x402 payment for this one request: the signed payment for the challenge a bare request receives in its `PAYMENT-REQUIRED` header. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request.'
+    mppPayment:
+      type: http
+      scheme: Payment
+      description: 'An MPP (Machine Payments Protocol) payment, settled through Stripe: the credential answering one of the `WWW-Authenticate: Payment` challenges a bare request receives. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request#paying-with-mpp.'
+x-service-info:
+  categories:
+  - brand-data
+  - company-data
+  - logos
+  docs:
+    homepage: https://docs.brandfetch.com
+    apiReference: https://docs.brandfetch.com/reference/brand-api
+    llms: https://brandfetch.com/llms.txt

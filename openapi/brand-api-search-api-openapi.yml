@@ -5,6 +5,10 @@ info:
   license:
     name: MIT
   version: 1.0.0
+  contact:
+    name: Brandfetch Support
+    url: https://brandfetch.com
+    email: support@brandfetch.io
 servers:
 - url: https://api.brandfetch.io
 tags:
@@ -15,6 +19,8 @@ paths:
       summary: Search brands
       description: Search for brands by name, login to get a clientId
       operationId: searchBrands
+      security:
+      - clientId: []
       parameters:
       - name: name
         in: path
@@ -29,6 +35,56 @@ paths:
         schema:
           type: string
       responses:
+        '429':
+          description: Refused. The organization behind the client ID has searched far beyond its monthly Brand Search allowance, the client ID went over its throughput limit of 6,000 requests per 5 minutes, or the per-IP throughput limit of 200 requests per 5 minutes was exceeded. All three carry a JSON body with a `message`. The first two also carry `x-bf-error` naming the reason (`quota_exceeded` or `rate_limited`), the same code in `error`, and a `docs` link; the allowance refusal lifts when the allowance is raised or the billing period rolls over, the client ID throughput refusal once the rate falls back under the limit. The per-IP refusal carries neither the header nor `error`. See [rate limits](/brand-search-api/overview#rate-limits).
+          headers:
+            x-bf-error:
+              description: Present when the edge refused the request for exceeding the monthly allowance or the client ID throughput limit. Absent on a per-IP throughput refusal.
+              schema:
+                type: string
+                enum:
+                - quota_exceeded
+                - rate_limited
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  error:
+                    type: string
+                    description: Present on the allowance and client ID throughput refusals, matching the `x-bf-error` header.
+                    enum:
+                    - quota_exceeded
+                    - rate_limited
+                  message:
+                    type: string
+                    example: Slow down.
+                  docs:
+                    type: string
+                    format: uri
+                    description: Present on the allowance and client ID throughput refusals.
+                    example: https://docs.brandfetch.com/brand-search-api/overview#errors
+        '503':
+          description: 'The search could not be answered. Retry after about 10 seconds: an identical request made sooner can get the same response. A `503` does not count towards your Brand Search allowance. See [errors](/brand-search-api/overview#errors).'
+          headers:
+            x-bf-error:
+              description: '`temporarily_unavailable` when the search itself failed.'
+              schema:
+                type: string
+                enum:
+                - temporarily_unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  message:
+                    type: string
+                    example: Brand Search is temporarily unavailable. Please retry.
         '200':
           description: Returns brand data
           content:
@@ -64,3 +120,26 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
+    clientId:
+      type: apiKey
+      in: query
+      name: c
+      description: Your Brand Search client ID, sent as the `c` query parameter. Get one at https://developers.brandfetch.com.
+    x402Payment:
+      type: apiKey
+      in: header
+      name: PAYMENT-SIGNATURE
+      description: 'An x402 payment for this one request: the signed payment for the challenge a bare request receives in its `PAYMENT-REQUIRED` header. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request.'
+    mppPayment:
+      type: http
+      scheme: Payment
+      description: 'An MPP (Machine Payments Protocol) payment, settled through Stripe: the credential answering one of the `WWW-Authenticate: Payment` challenges a bare request receives. Alternative to the bearer API key. See https://docs.brandfetch.com/agents/pay-per-request#paying-with-mpp.'
+x-service-info:
+  categories:
+  - brand-data
+  - company-data
+  - logos
+  docs:
+    homepage: https://docs.brandfetch.com
+    apiReference: https://docs.brandfetch.com/reference/brand-api
+    llms: https://brandfetch.com/llms.txt
