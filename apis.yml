@@ -219,6 +219,8 @@ apis:
   humanURL: https://docs.brandfetch.com/mcp/overview
   baseURL: https://mcp.brandfetch.io/mcp
   tags:
+  - Agents
+  tags_raw:
   - agents
   properties:
   - type: OpenAPI
