@@ -1,4 +1,4 @@
-# Brand API (Brandfetch) (brand-api)
+# Brand API (Brandfetch)
 
 <!-- API-EVANGELIST-PROVENANCE:BEGIN -->
 > ### About this repository
@@ -64,102 +64,153 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Brandfetch provides programmatic access to brand assets and company data through a suite of APIs. The Brand API retrieves logos, color schemes, fonts, images, and firmographic information for any company via domain, stock ticker, ISIN code, or crypto symbol. The Logo Link API serves logos via CDN with support for multiple formats, themes, and sizes. The Brand Search API enables autocomplete experiences by matching brand names to their domains and identifiers. All APIs support Bearer token authentication with free access for development.
+Brandfetch provides programmatic access to brand assets and company data through a suite of APIs. The Brand API retrieves logos, color schemes, fonts, images, and firmographic information for any company via domain, stock ticker, ISIN code, or crypto symbol. The Logo Link API serves logos via CDN with support for multiple formats, themes, and sizes. The Brand Search API enables autocomplete experiences by matching brand names to their domains and identifiers. The Brand Context API returns an LLM-ready narrative profile — identity, positioning, voice and visual style — for grounding agents, and the Transaction API resolves raw payment descriptors into merchant identity. A hosted MCP server at mcp.brandfetch.io exposes the same capabilities as seven agent tools over OAuth, and an Enterprise GraphQL endpoint carries the account, webhook and brand-monitoring plane. REST authenticates with Bearer API keys; the Logo and Search APIs use a public, embeddable Client ID.
 
-**APIs.json:** [https://raw.githubusercontent.com/api-evangelist/brand-api/refs/heads/main/apis.yml](https://raw.githubusercontent.com/api-evangelist/brand-api/refs/heads/main/apis.yml)
+**Areas:** Brands · Logo · Brand Assets · Company Data · Firmographics · Brand Context · Merchant Enrichment · Agent Tools · A2A
 
-## Scope
+## Brand API (Brandfetch) on APIs.io
 
-- **Type:** Index
-- **Position:** Consuming
-- **Access:** 3rd-Party
+Everything profiled for Brand API (Brandfetch) is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/brand-api/](https://apis.io/providers/brand-api/)** — or go straight to one of the APIs or properties below.
 
-## Tags
+### APIs (8)
 
-- Brands
-- Logos
-- Brand Assets
-- Company Data
-- Firmographics
+- [Brandfetch MCP Server](https://apis.io/apis/brand-api/brandfetch-mcp/) — Hosted, remote, streamable-HTTP MCP server exposing seven Brandfetch tools — brand_search, get_brand, get_brand_context, enrich_transaction,…
+- [Brandfetch GraphQL API](https://apis.io/apis/brand-api/brandfetch-graphql/) — Enterprise GraphQL endpoint carrying the account plane the REST API does not expose — organizations, API keys, request logs, quotas, billing, webhook…
+- [Brandfetch Logo Link API](https://apis.io/apis/brand-api/brandfetch-logo-link-api/) — Logo Link delivers brand logos directly via CDN URL embedding. Supports lookup by domain, stock ticker, crypto symbol, or ISIN. Parameters include logo type…
+- [Brandfetch Brand Search API](https://apis.io/apis/brand-api/brandfetch-brand-search-api/) — Brand Search API matches brand names to their corresponding domain URLs and unique identifiers, enabling rich autocomplete experiences. Endpoint: GET…
+- [Brand API (Brandfetch) Brands API](https://apis.io/apis/brand-api/brand-api-brands-api/) — The Brands API from Brand API (Brandfetch) — the tag-split refinement of the earlier single-operation harvest, superseded by the full nine-operation spec on…
+- [Brand API (Brandfetch) Context API](https://apis.io/apis/brand-api/brand-api-context-api/) — The context API from Brand API (Brandfetch) — 1 operation(s) for context.
+- [Brand API (Brandfetch) Search API](https://apis.io/apis/brand-api/brand-api-search-api/) — The Search API from Brand API (Brandfetch) — 1 operation(s) for search.
+- [Brand API (Brandfetch) Viewer API](https://apis.io/apis/brand-api/brand-api-viewer-api/) — The viewer API from Brand API (Brandfetch) — 1 operation(s) for viewer.
 
-## Timestamps
+### Published properties
 
-- **Created:** 2024-03-30
-- **Modified:** 2026-04-21
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
 
-## APIs
+#### AsyncAPI (1)
 
-### Brandfetch Brand API
+Event-driven and webhook contracts.
 
-Brand API provides programmatic access to any company's brand assets through a single API call. Returns the latest logos, color schemes, fonts, images, and firmographic information. Supports lookup by domain (e.g. nike.com), stock/ETF ticker (e.g. NKE), ISIN code, or crypto symbol (e.g. BTC). Base endpoint: GET /v2/brands/{identifier}. Authentication via Bearer token. Free sandbox testing available on the brandfetch.com domain.
+- [Brand Api Webhooks](https://apis.io/asyncapis/brand-api/brand-api-webhooks/)
 
-- **Human URL:** [https://docs.brandfetch.com/docs/brand-api](https://docs.brandfetch.com/docs/brand-api)
+#### MCP servers (1)
 
-#### Tags
+Model Context Protocol servers that expose the API to agents.
 
-- Brands
-- Logos
-- Colors
-- Fonts
-- Firmographics
+- [brandfetch](https://apis.io/servers/brand-api/brandfetch/)
 
-#### Properties
+#### Collections (1)
 
-- [OpenAPI](openapi/brandfetch-brand-api.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Documentation](https://docs.brandfetch.com/docs/brand-api)
+Postman and Open Collection request collections.
 
-### Brandfetch Logo Link API
+- [Brandfetch Brand Brands API](https://apis.io/collections/brand-api/open-brand-api-brands-api/)
 
-Logo Link delivers brand logos directly via CDN URL embedding. Supports lookup by domain, stock ticker, crypto symbol, or ISIN. Parameters include logo type (icon, symbol, logo), theme (light/dark), height/width, format (webp, png, jpg, svg), and fallback behavior. Base CDN URL: https://cdn.brandfetch.io/{identifier}?c=CLIENT_ID. Free with fair-use rate limits; no attribution required.
+#### Overlays (1)
 
-- **Human URL:** [https://docs.brandfetch.com/docs/logo-link](https://docs.brandfetch.com/docs/logo-link)
+OpenAPI overlays, including conversational phrasing for each operation.
 
-#### Tags
+- [Brand Api Brandfetch Overlay](https://apis.io/overlays/brand-api/brand-api-brandfetch-overlay/)
 
-- Logos
-- CDN
-- Brand Assets
+#### Security (3)
 
-#### Properties
+Authentication, trust centre, and vulnerability disclosure.
 
-- [Documentation](https://docs.brandfetch.com/docs/logo-link)
+- [Brand Api Authentication](https://apis.io/security/brand-api/brand-api-authentication/)
+- [Brand Api Domain Security](https://apis.io/security/brand-api/brand-api-domain-security/)
+- [Brand Api Trust Center](https://apis.io/security/brand-api/brand-api-trust-center/)
 
-### Brandfetch Brand Search API
+#### OAuth scopes (1)
 
-Brand Search API matches brand names to their corresponding domain URLs and unique identifiers, enabling rich autocomplete experiences. Endpoint: GET https://api.brandfetch.io/v2/search/:name. Authentication via Client ID query parameter. Free to use; no attribution required.
+The permissions the API asks for.
 
-- **Human URL:** [https://docs.brandfetch.com/docs/brand-search-api](https://docs.brandfetch.com/docs/brand-search-api)
+- [Brand Api Scopes](https://apis.io/scopes/brand-api/brand-api-scopes/)
 
-#### Tags
+#### Plans and pricing (1)
 
-- Brand Search
-- Autocomplete
-- Domain Matching
+Published plans, tiers and prices.
 
-#### Properties
+- [Brand Api Plans Pricing](https://apis.io/plans/brand-api/brand-api-plans-pricing/)
 
-- [Documentation](https://docs.brandfetch.com/docs/brand-search-api)
+#### Rate limits (1)
 
-## Common Properties
+Published request limits.
 
-- [GitHub Organization](https://github.com/brandfetch)
-- [LinkedIn](https://www.linkedin.com/company/brandfetch)
-- [Customers](https://brandfetch.com/developers/customers)
+- [Brand Api Rate Limits](https://apis.io/rate-limits/brand-api/brand-api-rate-limits/)
+
+#### FinOps (1)
+
+What the API costs to run, by operation.
+
+- [Brand Api Finops](https://apis.io/finops/brand-api/brand-api-finops/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://www.brandfetch.com/)
+- [Getting started](https://docs.brandfetch.com/get-started)
+- [API reference](https://docs.brandfetch.com/reference/overview)
 - [Pricing](https://brandfetch.com/developers/pricing)
-- [Getting Started](https://docs.brandfetch.com/docs/getting-started)
-- [Webhooks](https://docs.brandfetch.com/docs/webhooks/overview)
-- [Event Types](https://docs.brandfetch.com/docs/webhooks/event-types)
+- [Sign up](https://developers.brandfetch.com/register)
 - [Support](https://docs.brandfetch.com/support/getting-help)
-- [Issues](https://docs.brandfetch.com/support/report-inaccuracies)
-- [Recipes](https://docs.brandfetch.com/recipes/overview)
-- [Documentation](https://docs.brandfetch.com/reference/overview)
-- [Sandbox](https://docs.brandfetch.com/docs/brand-api#testing-sandbox)
-- [Changelog](https://docs.brandfetch.com/changelog/2024)
-- [Login](https://developers.brandfetch.com/)
-- [Sign Up](https://developers.brandfetch.com/register)
-- [L L Ms Txt](https://docs.brandfetch.com/llms.txt)
+- [Changelog](https://docs.brandfetch.com/changelog/overview)
+- [Blog](https://brandfetch.com/blog)
+- [Compliance](https://trust.brandfetch.com)
+- [Terms of service](https://docs.brandfetch.com/support/terms-and-conditions)
+- [GitHub](https://github.com/brandfetch)
+- [Status](https://status.brandfetch.io)
 
-## Maintainers
+## API Evangelist rating
 
-**FN:** API Evangelist
-**Email:** info@apievangelist.com
+**Kin Score 61.1** — strong · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 75.0 |
+| Contract quality | 63.3 |
+| Contract governance | 18.2 |
+| Operational transparency | 65.8 |
+| Developer ergonomics | 71.4 |
+| Access clarity | 57.9 |
+
+**Agent readiness 50.9** — agent-ready (gated down from agent-native)
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | — |
+| Reversibility Documented | — |
+| MCP Server | documented (partial credit) |
+| Auth Clarity | served (partial credit) |
+| Idempotency | — |
+| Error Semantics | derived (partial credit) |
+| OpenAPI Examples | verified |
+| Rate Limit Signal | verified |
+| Event Surface Described | yes |
+| Agent Skills | yes |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | served (partial credit) |
+| Protected Resource Metadata | verified |
+| Dynamic Client Registration | yes |
+| Agentic Commerce | — |
+| Pagination Ratio | — |
+| Operation Distinctiveness | — |
+
+**Regulatory alignment 32.1** — Payments
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/brand-api/](https://apis.io/providers/brand-api/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Brand API (Brandfetch): the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/brand-api/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
