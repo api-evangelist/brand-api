@@ -50,7 +50,7 @@ rate_limit_statements:
 - Brand fetches up to 2500 /mo
 - 'Logo API and Brand Search API are soft-capped: going over triggers a notification, not a hard stop.'
 x-canonical:
-  generated: '2026-11-02'
+  generated: '2026-11-06'
   vocabulary: engine/economics/plans-canonical.yml
   models:
   - hybrid
